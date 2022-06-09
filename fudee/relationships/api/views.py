@@ -15,10 +15,11 @@ from rest_framework.viewsets import GenericViewSet
 import uuid as uuid_lib
 
 from fudee.relationships.api.serializers import \
-    GetInviteSerializer, CreateInviteSerializer
+    GetInviteSerializer, CreateInviteSerializer, \
+    GetRelationshipSerializer, CreateRelationshipSerializer
 
 from fudee.relationships.models import \
-    Invite
+    Invite, Relationship
 
 User = get_user_model()
 
@@ -94,3 +95,83 @@ class InviteViewSet(ListModelMixin, CreateModelMixin, GenericViewSet):
     def list(self, *args, **kwargs):
         serializer = GetInviteSerializer(self.get_queryset(), many=True, context={'request': self.request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+    queryset = Relationship.objects.all()
+    lookup_field = "uuid"
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['user1']
+    
+    def get_serializer_class(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            return GetRelationshipSerializer
+        if self.action == 'create' or self.action == 'update':
+            return CreateRelationshipSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        assert isinstance(self.request.user.id, int)
+        # user default
+        user1 = self.request.user.id
+        
+        # if self.request.data['user1'] is not None:
+        #     user = self.request.data['user1']
+        # if self.request.data['user2'] is not None:
+        #     req_user2 = self.request.data['user2']
+            
+        if self.request.user.id != user1:
+            return self.queryset.none()
+        
+        # if self.request.data['user1'] is not None and self.request.data['user2'] is not None:
+        #     return self.queryset.filter(Q(user2=req_user2) | Q(user=req_user))
+        # elif self.request.data['user1'] is  None and self.request.data['user2'] is not None:
+        #     return None
+        return self.queryset.filter(Q(user2=user1) | Q(user1=user1))
+    
+    # def get_object(self, *args, **kwargs):
+    #     assert isinstance(self.request.user, User)
+    #     try:
+    #         return Relationship.objects.filter(Q(user1=self.request.kwargs['uuid']) | Q(user2=self.request.kwargs['uuid'])).first()
+    #     except Relationship.DoesNotExist:
+    #         raise http.Http404
+    
+    def list(self, *args, **kwargs):
+        serializer = GetRelationshipSerializer(self.get_queryset(), many=True, context={'request': self.request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def create(self, *args, **kwargs):
+        if self.request.user.id != self.request.data['user1'] and self.request.user.id != self.request.data['user2']:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = CreateRelationshipSerializer(data=self.request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
+    
+    def update(self, *args, **kwargs):
+        data = {key: self.request.data[key] for key in self.request.data.keys() & {'relationship'}}
+        data['uuid'] = self.kwargs['uuid']
+        data['updater_id'] = self.request.user.id
+        instance = None
+        
+        try:
+            instance = self.queryset.get(uuid=data['uuid'])
+        except self.queryset.DoesNotExist:
+            Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        if self.request.user.id != instance.user1.id and self.request.user.id != instance.user2.id:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = CreateRelationshipSerializer(instance=instance, data=data, partial=True)
+
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            return Response(status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
+
+    # @action(detail=False)
+    # def me(self, request):
+    #     serializer = RelationshipSerializer(request.user, context={"request": request})
+    #     return Response(status=status.HTTP_200_OK, data=serializer.data)
