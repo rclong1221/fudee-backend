@@ -14,7 +14,7 @@ from rest_framework.viewsets import GenericViewSet
 
 import uuid as uuid_lib
 
-from fudee.relationships.serializers import \
+from fudee.relationships.api.serializers import \
     GetInviteSerializer, CreateInviteSerializer
 
 from fudee.relationships.models import \

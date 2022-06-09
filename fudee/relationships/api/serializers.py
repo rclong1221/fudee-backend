@@ -1,8 +1,8 @@
 import uuid
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from fudee.users.models import Invite
-from fudee.users.serializers import UserSerializer
+from fudee.relationships.models import Invite
+from fudee.users.api.serializers import UserSerializer
 
 from phonenumber_field.modelfields import PhoneNumberField
 from datetime import datetime
