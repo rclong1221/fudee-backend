@@ -21,7 +21,7 @@ crispy-bootstrap5==0.6  # https://github.com/django-crispy-forms/crispy-bootstra
 django-redis==5.2.0  # https://github.com/jazzband/django-redis
 django-filter==21.1
 django-allauth==0.50.0
-dj_rest_auth==2.2.4
+django-rest-auth==0.9.5
 django-organizations==2.0.2
 django_private_chat2==1.0.2
 django-phonenumber-field==6.1.0

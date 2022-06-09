@@ -74,7 +74,7 @@ THIRD_PARTY_APPS = [
     "django_celery_beat",
     "rest_framework",
     "rest_framework.authtoken",
-    "dj_rest_auth",
+    "rest_auth",
     "corsheaders",
     "drf_spectacular",
     "phonenumber_field",
