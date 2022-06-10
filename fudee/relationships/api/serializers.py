@@ -8,6 +8,8 @@ from fudee.users.api.serializers import UserSerializer
 from phonenumber_field.modelfields import PhoneNumberField
 from datetime import datetime
 
+User = get_user_model()
+
 class GetInviteSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     phone = PhoneNumberField()
