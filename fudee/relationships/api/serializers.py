@@ -2,7 +2,7 @@ import uuid
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from fudee.relationships.models import Invite, \
-    Relationship, User_Group
+    Relationship, User_Group, User_Group_User
 from fudee.users.api.serializers import UserSerializer
 
 from phonenumber_field.modelfields import PhoneNumberField
