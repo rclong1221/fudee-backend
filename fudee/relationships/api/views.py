@@ -20,7 +20,7 @@ from fudee.relationships.api.serializers import \
     GetUserGroupSerializer, CreateUserGroupSerializer
 
 from fudee.relationships.models import \
-    Invite, Relationship, User_Group
+    Invite, Relationship, User_Group, User_Group_User
 
 User = get_user_model()
 
