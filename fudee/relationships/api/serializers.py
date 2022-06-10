@@ -3,7 +3,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from fudee.relationships.models import Invite, \
     Relationship, User_Group, User_Group_User
-from fudee.users.api.serializers import UserSerializer
+from .serializers import UserSerializer, \
+    GetInviteSerializer, CreateInviteSerializer, \
+    GetRelationshipSerializer, CreateRelationshipSerializer, \
+    GetUserGroupSerializer, CreateUserGroupSerializer, \
+    GetUserGroupUserSerializer, CreateUserGroupUserSerializer
+    
 
 from phonenumber_field.modelfields import PhoneNumberField
 from datetime import datetime
