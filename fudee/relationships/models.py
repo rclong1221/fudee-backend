@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 import uuid as uuid_lib
 
@@ -56,3 +57,21 @@ class Relationship(models.Model):
     class Meta:
         unique_together = (('user1', 'user2'),)
         index_together = (('user1', 'user2'),)
+        
+class User_Group(models.Model):
+    """
+    
+    """
+    uuid = models.UUIDField( # Used by the API to look up the record 
+        db_index=True,
+        unique=True,
+        default=uuid_lib.uuid4,
+        editable=False)
+    name = models.CharField(_("Name of User Group"), blank=True, max_length=255)
+    creator = models.ForeignKey(User, on_delete=models.PROTECT)
+    date_created = models.DateField(auto_now_add=True, blank=True)
+    image = models.FileField(blank=True, null=True)
+    
+    class Meta:
+        unique_together = (('name', 'creator'),)
+        index_together = (('name', 'creator'),)
