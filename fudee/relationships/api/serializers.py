@@ -2,7 +2,7 @@ import uuid
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from fudee.relationships.models import Invite, \
-    Relationship
+    Relationship, User_Group
 from fudee.users.api.serializers import UserSerializer
 
 from phonenumber_field.modelfields import PhoneNumberField
@@ -84,3 +84,37 @@ class CreateRelationshipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Relationship
         fields = ["uuid", "user1", "user2", "relationship", "date_created", "date_accepted", "date_updated", "updater_id"]
+
+class GetUserGroupSerializer(serializers.ModelSerializer):
+    creator = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = User_Group
+        fields = ["uuid", "name", "creator", "date_created", "image"]
+
+class CreateUserGroupSerializer(serializers.ModelSerializer):
+    uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
+    name = serializers.CharField()
+    creator = serializers.IntegerField()
+    date_created = serializers.DateField(read_only=True)
+    
+    def create(self, validated_data):
+        """
+        """
+        user = User.objects.get(id=validated_data['creator'])
+        data = User_Group.objects.create(
+            name=validated_data['name'],
+            creator=user,
+        )
+        return data
+    
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        # instance.date_updated = datetime.now().strftime("%Y-%m-%d")
+        # instance.updater_id = validated_data.get('updater_id', instance.updater_id)
+        instance.save()
+        return instance
+    
+    class Meta:
+        model = User_Group
+        fields = ["uuid", "name", "creator", "date_created"]

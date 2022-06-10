@@ -16,10 +16,11 @@ import uuid as uuid_lib
 
 from fudee.relationships.api.serializers import \
     GetInviteSerializer, CreateInviteSerializer, \
-    GetRelationshipSerializer, CreateRelationshipSerializer
+    GetRelationshipSerializer, CreateRelationshipSerializer, \
+    GetUserGroupSerializer, CreateUserGroupSerializer
 
 from fudee.relationships.models import \
-    Invite, Relationship
+    Invite, Relationship, User_Group
 
 User = get_user_model()
 
@@ -174,4 +175,59 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
     # @action(detail=False)
     # def me(self, request):
     #     serializer = RelationshipSerializer(request.user, context={"request": request})
+    #     return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
+class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+    queryset = User_Group.objects.all()
+    lookup_field = "uuid"
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['creator']
+
+    def get_serializer_class(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            return GetUserGroupSerializer
+        if self.action == 'create' or self.action == 'update':
+            return CreateUserGroupSerializer
+
+    # def get_queryset(self, *args, **kwargs):
+    #     assert isinstance(self.request.user.id, int)
+    #     return self.queryset.filter(id=self.request.user.id)
+    
+    def create(self, *args, **kwargs):
+        data = {key: self.request.data[key] for key in self.request.data.keys() & {'name'}}
+        data['creator'] = self.request.user.id
+        
+        serializer = CreateUserGroupSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
+
+    def update(self, *args, **kwargs):
+        data = {key: self.request.data[key] for key in self.request.data.keys() & {'name'}}
+        data['uuid'] = self.kwargs['uuid']
+        data['updater_id'] = self.request.user.id
+        instance = None
+        
+        try:
+            instance = self.queryset.get(uuid=data['uuid'])
+        except self.queryset.DoesNotExist:
+            Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        if self.request.user.id != instance.creator.id:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = CreateUserGroupSerializer(instance=instance, data=data, partial=True)
+
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            return Response(status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
+
+    # @action(detail=False)
+    # def me(self, request):
+    #     serializer = GetUserGroupSerializer(request.user, context={"request": request})
     #     return Response(status=status.HTTP_200_OK, data=serializer.data)
