@@ -7,6 +7,7 @@ from fudee.users.forms import UserAdminChangeForm, UserAdminCreationForm
 
 User = get_user_model()
 
+
 @admin.register(User)
 class UserAdmin(auth_admin.UserAdmin):
     readonly_fields = ("uuid",)
@@ -14,7 +15,8 @@ class UserAdmin(auth_admin.UserAdmin):
     add_form = UserAdminCreationForm
     fieldsets = (
         (None, {"fields": ("username", "password")}),
-        (_("Personal info"), {"fields": ("name", "first_name", "middle_name", "last_name", "email", "image", "uuid")}),
+        (_("Personal info"), {"fields": ("name", "first_name", "middle_name", "last_name", "email", "uuid")}),
+        (_("Profile Picture"), {"fields": ("image",)}),
         (
             _("Permissions"),
             {
@@ -31,3 +33,4 @@ class UserAdmin(auth_admin.UserAdmin):
     )
     list_display = ["username", "name", "is_superuser"]
     search_fields = ["name"]
+
