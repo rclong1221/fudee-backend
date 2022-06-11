@@ -3,11 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from fudee.relationships.models import Invite, \
     Relationship, User_Group, User_Group_User
-from .serializers import UserSerializer, \
-    GetInviteSerializer, CreateInviteSerializer, \
-    GetRelationshipSerializer, CreateRelationshipSerializer, \
-    GetUserGroupSerializer, CreateUserGroupSerializer, \
-    GetUserGroupUserSerializer, CreateUserGroupUserSerializer
+from fudee.users.api.serializers import UserSerializer
     
 
 from phonenumber_field.modelfields import PhoneNumberField
@@ -153,7 +149,7 @@ class CreateUserGroupUserSerializer(serializers.ModelSerializer):
             group=group,
             user=user,
             access=validated_data['access'],
-            is_active=False,
+            is_active=validated_data['is_active'],
             date_updated=datetime.now().strftime("%Y-%m-%d"),
             updater_id=validated_data['updater_id'],
         )
