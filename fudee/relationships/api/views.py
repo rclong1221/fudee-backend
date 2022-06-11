@@ -17,7 +17,8 @@ import uuid as uuid_lib
 from fudee.relationships.api.serializers import \
     GetInviteSerializer, CreateInviteSerializer, \
     GetRelationshipSerializer, CreateRelationshipSerializer, \
-    GetUserGroupSerializer, CreateUserGroupSerializer
+    GetUserGroupSerializer, CreateUserGroupSerializer, \
+    GetUserGroupUserSerializer, CreateUserGroupUserSerializer
 
 from fudee.relationships.models import \
     Invite, Relationship, User_Group, User_Group_User
@@ -202,8 +203,23 @@ class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
         serializer = CreateUserGroupSerializer(data=data)
 
         if serializer.is_valid():
-            serializer.save()
-            return Response(status=status.HTTP_201_CREATED)
+            ug_obj = serializer.save()
+            # Create User_Group_User entry for creator
+            ug = User_Group.objects.get(id=ug_obj.id)
+            group_user = {
+                'group': ug.id,
+                'user': self.request.user.id,
+                'access': 2,     #admin
+                'is_active': True,
+                'updater_id': self.request.user.id,
+            }
+            gs = CreateUserGroupUserSerializer(data=group_user)
+            if gs.is_valid():
+                gs.save()
+                return Response(status=status.HTTP_201_CREATED)
+            else:
+                ug.delete()
+                return Response(status=status.HTTP_409_CONFLICT)
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
 
     def update(self, *args, **kwargs):
@@ -262,6 +278,8 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
         
         if data['access'] > max_access:
             data['access'] = max_access
+        
+        data['is_active'] = False
         
         serializer = CreateUserGroupUserSerializer(data=data)
 
