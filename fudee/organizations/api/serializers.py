@@ -10,7 +10,7 @@ User = get_user_model()
 
 class GetOrganizationSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
-    name = serializers.CharField(max_length=254, blank=False, null=False, read_only=True)
+    name = serializers.CharField(read_only=True)
     image = serializers.FileField(read_only=True)
     date_created = serializers.DateField(read_only=True)
     date_updated = serializers.DateField(read_only=True)
@@ -22,7 +22,7 @@ class GetOrganizationSerializer(serializers.ModelSerializer):
 
 class CreateOrganizationSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
-    name = serializers.CharField(max_length=254, blank=False, null=False)
+    name = serializers.CharField(max_length=254, allow_blank=False)
     image = serializers.IntegerField()
     date_created = serializers.DateField(read_only=True)
     date_updated = serializers.DateField(read_only=True)
