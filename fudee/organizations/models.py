@@ -20,12 +20,12 @@ class Organization(models.Model):
         unique=True,
         default=uuid_lib.uuid4,
         editable=False)
-    user = models.ForeignKey(User, related_name="invite_from_user", on_delete=models.PROTECT)
-    email = models.EmailField(max_length=254, blank=True)
-    phone = PhoneNumberField(blank=True)
-    accepted = models.BooleanField(default=False)
+    name = models.CharField(max_length=254, blank=False, null=False)
+    image = models.FileField(blank=True, null=True)
     date_created = models.DateField(auto_now_add=True, blank=True)
+    date_updated = models.DateField(blank=True, null=True)
+    updater_id = models.IntegerField(blank=True, null=True)
     
     def clean(self):
-        if not self.email and not self.phone:
-            raise ValidationError("Email address or phone number is required.")
+        if not self.name:
+            raise ValidationError("Valid organization name is required.")
