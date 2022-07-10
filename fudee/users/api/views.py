@@ -4,8 +4,11 @@ from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
 
-from .serializers import UserSerializer
+from fudee.users.api.serializers import UserSerializer, UserImageSerializer
+
+from fudee.users.models import User_Image
 
 User = get_user_model()
 
@@ -29,7 +32,7 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyM
         try:
             return User.objects.get(uuid=self.request.user.uuid)
         except User.DoesNotExist:
-            raise http.Http404
+            return Response(status=status.HTTP_404_NOT_FOUND)
     
     def update(self, *args, **kwargs):
         user = self.get_object(self.request.user.uuid)
@@ -53,3 +56,42 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyM
     def me(self, request):
         serializer = UserSerializer(request.user, context={"request": request})
         return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+class UserImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+    serializer_class = UserImageSerializer
+    queryset = User_Image.objects.all()
+    lookup_field = "uuid"
+    parser_classes = (MultiPartParser, FileUploadParser)
+    
+    def get_object(self, *args, **kwargs):
+        try:
+            return User_Image.objects.get(user=self.request.user)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+    
+    def retrieve(self, *args, **kwargs):
+        ui = User_Image.objects.filter(user=self.request.user).latest('date_created')
+        
+        user_image = {
+            'uuid': ui.uuid,
+            'user': ui.user.id,
+            'image': ui.image,
+            'date_created': ui.date_created
+        }
+
+        serializer = UserImageSerializer(data=user_image)
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
+    
+    def create(self, *args, **kwargs):
+        # if user has R+W (1) or is admin (2)
+        data = self.request.data
+        data['user'] = self.request.user.id
+        
+        serializer = UserImageSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
