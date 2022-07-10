@@ -26,7 +26,7 @@ class User(AbstractUser):
     middle_name = models.CharField(_("Middle Name"), blank=True, max_length=255)
     is_active = models.BooleanField(default=True)
     date_updated = models.DateTimeField(auto_now_add=True)
-    image = models.FileField(blank=True, null=True)
+    image = models.ImageField(blank=True, null=True)
 
     def get_absolute_url(self):
         """Get url for user's detail view.
