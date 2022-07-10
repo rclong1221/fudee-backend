@@ -9,7 +9,7 @@ from .serializers import UserSerializer
 
 User = get_user_model()
 
-
+import uuid as uuid_lib
 
 class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = UserSerializer
