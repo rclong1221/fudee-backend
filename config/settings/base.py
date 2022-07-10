@@ -329,6 +329,7 @@ SPECTACULAR_SETTINGS = {
         {"url": "http://127.0.0.1:8000", "description": "Local Development server"},
         {"url": "https://splootsploot.com", "description": "Production server"},
     ],
+    "COMPONENT_SPLIT_REQUEST": True
 }
 # Your stuff...
 # ------------------------------------------------------------------------------
