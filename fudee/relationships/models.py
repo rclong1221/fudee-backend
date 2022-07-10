@@ -103,3 +103,16 @@ class User_Group_User(models.Model):
     class Meta:
         unique_together = (('group', 'user'),)
         index_together = (('group', 'user'),)
+
+class User_Group_Image(models.Model):
+    """
+    
+    """
+    uuid = models.UUIDField( # Used by the API to look up the record 
+        db_index=True,
+        unique=True,
+        default=uuid_lib.uuid4,
+        editable=False)
+    image = models.ImageField(blank=True, null=True)
+    user_group = models.ForeignKey(User_Group, on_delete=models.PROTECT)
+    date_created = models.DateTimeField(auto_now_add=True, blank=True)
