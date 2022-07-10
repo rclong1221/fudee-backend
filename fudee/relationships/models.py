@@ -70,7 +70,6 @@ class User_Group(models.Model):
     name = models.CharField(_("Name of User Group"), blank=True, max_length=255)
     creator = models.ForeignKey(User, on_delete=models.PROTECT)
     date_created = models.DateField(auto_now_add=True, blank=True)
-    image = models.FileField(blank=True, null=True)
     
     class Meta:
         unique_together = (('name', 'creator'),)
