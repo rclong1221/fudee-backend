@@ -50,7 +50,7 @@ class CreateOrganizationSerializer(serializers.ModelSerializer):
 
 # TODO: class UpdateOrganizationImageSerializer(serializers.ModelSerializer):
 
-class GetOrganizationSerializer(serializers.ModelSerializer):
+class GetOrganizationUserSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
     organization = serializers.IntegerField(read_only=True)
     user = serializers.IntegerField(read_only=True)
@@ -64,7 +64,7 @@ class GetOrganizationSerializer(serializers.ModelSerializer):
         model = OrganizationUser
         fields = ["uuid", "organization", "user", "access", "is_active", "date_created", "date_accepted", "date_updated", "updater_id"]
 
-class CreateOrganizationSerializer(serializers.ModelSerializer):
+class CreateOrganizationUserSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
     organization = serializers.IntegerField()
     user = serializers.IntegerField()
