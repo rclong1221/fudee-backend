@@ -69,6 +69,7 @@ class User_Group(models.Model):
         editable=False)
     name = models.CharField(_("Name of User Group"), blank=True, max_length=255)
     creator = models.ForeignKey(User, on_delete=models.PROTECT)
+    primary_image = models.UUIDField(blank=True, null=True)
     date_created = models.DateField(auto_now_add=True, blank=True)
     
     class Meta:
@@ -115,3 +116,16 @@ class User_Group_Image(models.Model):
     image = models.ImageField(blank=True, null=True)
     user_group = models.ForeignKey(User_Group, on_delete=models.PROTECT)
     date_created = models.DateTimeField(auto_now_add=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # Call the "real" save() method.
+        ug = None
+        
+        try:
+            ug = User_Group.objects.get(uuid=self.user_group.uuid)
+        except self.queryset.DoesNotExist:
+            return
+        
+        ug.primary_image = self.uuid
+        ug.save()
+        
