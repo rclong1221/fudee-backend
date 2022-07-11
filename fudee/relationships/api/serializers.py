@@ -2,7 +2,7 @@ import uuid
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from fudee.relationships.models import Invite, \
-    Relationship, User_Group, User_Group_User
+    Relationship, User_Group, User_Group_User, User_Group_Image
 from fudee.users.api.serializers import UserSerializer
     
 
@@ -93,7 +93,7 @@ class GetUserGroupSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User_Group
-        fields = ["uuid", "name", "creator", "date_created", "image"]
+        fields = ["uuid", "name", "creator", "date_created", "primary_image"]
 
 class CreateUserGroupSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
@@ -166,3 +166,23 @@ class CreateUserGroupUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User_Group_User
         fields = ["uuid", "group", "user", "access", "is_active", "date_created", "date_accepted", "date_updated", "updater_id"]
+        
+class UserGroupImageSerializer(serializers.ModelSerializer):
+    uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
+    image = serializers.ImageField()
+    user_group = serializers.IntegerField()
+    date_created = serializers.DateTimeField(read_only=True)
+
+    def create(self, validated_data):
+        """
+        """
+        user_group = User_Group.objects.get(id=validated_data['user_group'])
+        data = User_Group_Image.objects.create(
+            image=validated_data['image'],
+            user_group=user_group
+        )
+        return data
+    
+    class Meta:
+        model = User_Group_Image
+        fields = ["uuid", "image", "user_group", "date_created"]
