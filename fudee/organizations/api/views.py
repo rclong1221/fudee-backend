@@ -44,10 +44,26 @@ class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
         data = self.request.data
         data['updater_id'] = self.request.user.id
         serializer = CreateOrganizationSerializer(data=data)
-
+        
         if serializer.is_valid():
-            serializer.save()
-            return Response(status=status.HTTP_201_CREATED)
+            org_obj = serializer.save()
+            # Create Organization entry for creator
+            org = Organization.objects.get(id=org_obj.id)
+            # Create OrganizationUser entry
+            org_user = {
+                'organization': org.id,
+                'user': self.request.user.id,
+                'access': 2,     #admin
+                'is_active': True,
+                'updater_id': self.request.user.id,
+            }
+            gs = CreateOrganizationUserSerializer(data=org_user)
+            if gs.is_valid():
+                gs.save()
+                return Response(status=status.HTTP_201_CREATED)
+            else:
+                org.delete()
+                return Response(status=status.HTTP_409_CONFLICT)
         
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
     
