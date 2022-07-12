@@ -25,6 +25,7 @@ class Organization(models.Model):
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_updated = models.DateField(blank=True, null=True)
     updater_id = models.IntegerField(blank=True, null=True)
+    primary_image = models.UUIDField(blank=True, null=True)
     
     def clean(self):
         if not self.name:
@@ -57,3 +58,28 @@ class OrganizationUser(models.Model):
     class Meta:
         unique_together = (('organization', 'user'),)
         index_together = (('organization', 'user'),)
+
+class Organization_Image(models.Model):
+    """
+    
+    """
+    uuid = models.UUIDField( # Used by the API to look up the record 
+        db_index=True,
+        unique=True,
+        default=uuid_lib.uuid4,
+        editable=False)
+    image = models.ImageField(blank=True, null=True)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    date_created = models.DateTimeField(auto_now_add=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # Call the "real" save() method.
+        org = None
+        
+        try:
+            org = Organization.objects.get(uuid=self.organization.uuid)
+        except self.queryset.DoesNotExist:
+            return
+        
+        org.primary_image = self.uuid
+        org.save()
