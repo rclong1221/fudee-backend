@@ -2,12 +2,9 @@
 
 fudee, a social planning application for the bar and restaurant industry.  Made by industry workers, for industry workers.
 
-[![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
+[![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/django/django/)
+[![Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
 [![Black code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
-
-## Settings
-
-Moved to [settings](http://cookiecutter-django.readthedocs.io/en/latest/settings.html).
 
 ## Basic Commands
 
@@ -60,9 +57,6 @@ Please note: For Celery's import magic to work, it is important *where* the cele
 
 In development, it is often nice to be able to see emails that are being sent from your application. For that reason local SMTP server [MailHog](https://github.com/mailhog/MailHog) with a web interface is available as docker container.
 
-Container mailhog will start automatically when you will run all docker containers.
-Please check [cookiecutter-django Docker documentation](http://cookiecutter-django.readthedocs.io/en/latest/deployment-with-docker.html) for more details how to start all containers.
-
 With MailHog running, to view messages that are sent by your application, open your browser and go to `http://127.0.0.1:8025`
 
 ### Sentry
@@ -78,4 +72,24 @@ The following details how to deploy this application.
 
 ### Docker
 
-See detailed [cookiecutter-django Docker documentation](http://cookiecutter-django.readthedocs.io/en/latest/deployment-with-docker.html).
+Build and run
+``` bash
+docker-compose -f {local | production}.yml build
+docker-compose -f {local | production}.yml up -d
+```
+
+Python Django Shell
+``` bash
+docker-compose -f {local | production}.yml run --rm django python manage.py shell
+```
+
+Check logs
+``` bash
+docker-compose -f {local | production}.yml logs
+```
+
+Scale application
+``` bash
+docker-compose -f {local | production}.yml up --scale django=4
+docker-compose -f {local | production}.yml up --scale celeryworker=2
+```
