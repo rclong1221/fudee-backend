@@ -26,6 +26,7 @@ class User(AbstractUser):
     middle_name = models.CharField(_("Middle Name"), blank=True, max_length=255)
     is_active = models.BooleanField(default=True)
     date_updated = models.DateTimeField(auto_now_add=True)
+    primary_image = models.UUIDField(blank=True, null=True)
 
     def get_absolute_url(self):
         """Get url for user's detail view.
@@ -48,3 +49,15 @@ class User_Image(models.Model):
     image = models.ImageField(blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     date_created = models.DateTimeField(auto_now_add=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # Call the "real" save() method.
+        u = None
+        
+        try:
+            u = User.objects.get(uuid=self.user.uuid)
+        except self.queryset.DoesNotExist:
+            return
+        
+        u.primary_image = self.uuid
+        u.save()
