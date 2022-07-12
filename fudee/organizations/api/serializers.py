@@ -1,7 +1,7 @@
 import uuid
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from fudee.organizations.models import Organization, OrganizationUser
+from fudee.organizations.models import Organization, OrganizationUser, Organization_Image
     
 from phonenumber_field.modelfields import PhoneNumberField
 from datetime import datetime
@@ -18,7 +18,7 @@ class GetOrganizationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Organization
-        fields = ["uuid", "name", "image", "date_created", "date_updated", "updater_id"]
+        fields = ["uuid", "name", "image", "date_created", "date_updated", "updater_id", "primary_image"]
 
 class CreateOrganizationSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
@@ -100,3 +100,23 @@ class CreateOrganizationUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationUser
         fields = ["uuid", "organization", "user", "access", "is_active", "date_created", "date_accepted", "date_updated", "updater_id"]
+
+class OrganizationImageSerializer(serializers.ModelSerializer):
+    uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
+    image = serializers.ImageField()
+    organization = serializers.IntegerField()
+    date_created = serializers.DateTimeField(read_only=True)
+
+    def create(self, validated_data):
+        """
+        """
+        organization = Organization.objects.get(id=validated_data['organization'])
+        data = Organization_Image.objects.create(
+            image=validated_data['image'],
+            organization=organization
+        )
+        return data
+    
+    class Meta:
+        model = Organization
+        fields = ["uuid", "image", "organization", "date_created"]

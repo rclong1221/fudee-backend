@@ -11,15 +11,16 @@ from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, CreateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.parsers import MultiPartParser, FileUploadParser
 
 import uuid as uuid_lib
 
 from fudee.organizations.api.serializers import \
     GetOrganizationSerializer, CreateOrganizationSerializer, \
-    GetOrganizationUserSerializer, CreateOrganizationUserSerializer
+    GetOrganizationUserSerializer, CreateOrganizationUserSerializer, OrganizationImageSerializer
 
 from fudee.organizations.models import \
-    Organization, OrganizationUser
+    Organization, OrganizationUser, Organization_Image
 
 User = get_user_model()
 
@@ -154,3 +155,36 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
     def me(self, request):
         serializer = GetOrganizationUserSerializer(request.user, context={"request": request})
         return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+class OrganizationImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+    serializer_class = OrganizationImageSerializer
+    queryset = Organization_Image.objects.all()
+    parser_classes = (MultiPartParser, FileUploadParser)
+    lookup_field = "uuid"
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['organization']
+    
+    def create(self, *args, **kwargs):
+        data = self.request.data
+        org = None
+        org_user = None
+        
+        try:
+            org = Organization.objects.filter(id=data['organization'])[0]
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            org_user = OrganizationUser.objects.filter(Q(organization=org) & Q(user=self.request.user))[0]
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        if org_user.access != 2:
+            return Response(status.HTTP_404_NOT_FOUND)
+        
+        serializer = OrganizationImageSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
