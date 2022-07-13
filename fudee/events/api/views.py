@@ -46,26 +46,24 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
         
         if serializer.is_valid():
             event_obj = serializer.save()
-            
-            return Response(status=status.HTTP_201_CREATED)
         
-            # # Create Event entry for creator
-            # event = Event.objects.get(id=event_obj.id)
-            # # Create EventUser entry
-            # event_user = {
-            #     'event': event.id,
-            #     'user': self.request.user.id,
-            #     'access': 2,     #admin
-            #     'is_active': True,
-            #     'updater_id': self.request.user.id,
-            # }
-            # gs = CreateEventUserSerializer(data=event_user)
-            # if gs.is_valid():
-            #     eu = gs.save()
-            #     return Response(status=status.HTTP_201_CREATED)
-            # else:
-            #     event.delete()
-            #     return Response(status=status.HTTP_409_CONFLICT)
+            # Create Event entry for creator
+            event = Event.objects.get(id=event_obj.id)
+            # Create EventUser entry
+            event_user = {
+                'event': event.id,
+                'user': self.request.user.id,
+                'access': 2,     #admin
+                'is_active': True,
+                'updater_id': self.request.user.id,
+            }
+            gs = CreateEventUserSerializer(data=event_user)
+            if gs.is_valid():
+                gs.save()
+                return Response(status=status.HTTP_201_CREATED)
+            else:
+                event.delete()
+                return Response(status=status.HTTP_409_CONFLICT)
         
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
     
