@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from fudee.events.models import Event, EventUser
+from fudee.events.models import Event, EventUser, EventImage
 
 from datetime import datetime
 
@@ -104,3 +104,23 @@ class CreateEventUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventUser
         fields = ["uuid", "event", "user", "access", "is_active", "date_created", "date_accepted", "date_updated", "updater_id"]
+        
+class EventImageSerializer(serializers.ModelSerializer):
+    uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
+    image = serializers.ImageField()
+    event = serializers.IntegerField()
+    date_created = serializers.DateTimeField(read_only=True)
+
+    def create(self, validated_data):
+        """
+        """
+        event = Event.objects.get(id=validated_data['event'])
+        data = EventImage.objects.create(
+            image=validated_data['image'],
+            event=event
+        )
+        return data
+    
+    class Meta:
+        model = EventImage
+        fields = ["uuid", "image", "event", "date_created"]
