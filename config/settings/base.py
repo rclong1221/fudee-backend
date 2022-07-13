@@ -79,12 +79,14 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "phonenumber_field",
     "django_filters",
+    "recurrence",
 ]
 
 LOCAL_APPS = [
     "fudee.users",
     "fudee.relationships",
     "fudee.organizations",
+    "fudee.events",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
