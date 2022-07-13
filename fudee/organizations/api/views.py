@@ -161,8 +161,6 @@ class OrganizationImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewS
     queryset = Organization_Image.objects.all()
     parser_classes = (MultiPartParser, FileUploadParser)
     lookup_field = "uuid"
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['organization']
     
     def create(self, *args, **kwargs):
         data = self.request.data
