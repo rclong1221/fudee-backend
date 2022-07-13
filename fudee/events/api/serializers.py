@@ -16,7 +16,8 @@ class GetEventSerializer(serializers.ModelSerializer):
 
 class CreateEventSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
-    user = serializers.IntegerField(read_only=True)
+    user = serializers.IntegerField()
+    recurrences = serializers.CharField(allow_blank=True)
     date_updated = serializers.DateField(read_only=True)
     updater_id = serializers.IntegerField(read_only=True)
     
@@ -26,7 +27,6 @@ class CreateEventSerializer(serializers.ModelSerializer):
         """
         """
         user = User.objects.get(id=validated_data['user'])
-        organization = Event.objects.get(id=validated_data['group'])
         data = Event.objects.create(
             title=validated_data['title'],
             description=validated_data['description'],
