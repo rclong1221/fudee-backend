@@ -118,5 +118,5 @@ class OrganizationImageSerializer(serializers.ModelSerializer):
         return data
     
     class Meta:
-        model = Organization
+        model = Organization_Image
         fields = ["uuid", "image", "organization", "date_created"]
