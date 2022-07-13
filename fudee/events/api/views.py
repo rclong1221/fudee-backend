@@ -16,7 +16,7 @@ from rest_framework.parsers import MultiPartParser, FileUploadParser
 import uuid as uuid_lib
     
 from fudee.events.api.serializers import \
-    GetEventSerializer
+    GetEventSerializer, CreateEventSerializer
 
 from fudee.events.models import \
     Event
@@ -34,4 +34,39 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
         if self.action == 'list' or self.action == 'retrieve':
             return GetEventSerializer
         if self.action == 'create' or self.action == 'update':
-            return
+            return CreateEventSerializer
+        
+    def create(self, *args, **kwargs):
+        data = self.request.data.copy()
+        data['user'] = self.request.user.id
+        data['updater_id'] = self.request.user.id
+        
+        print("\n\n\n")
+        print(data)
+        print("\n\n\n")
+        serializer = CreateEventSerializer(data=data)
+        
+        if serializer.is_valid():
+            event_obj = serializer.save()
+            
+            return Response(status=status.HTTP_201_CREATED)
+        
+            # # Create Event entry for creator
+            # event = Event.objects.get(id=event_obj.id)
+            # # Create EventUser entry
+            # event_user = {
+            #     'event': event.id,
+            #     'user': self.request.user.id,
+            #     'access': 2,     #admin
+            #     'is_active': True,
+            #     'updater_id': self.request.user.id,
+            # }
+            # gs = CreateEventUserSerializer(data=event_user)
+            # if gs.is_valid():
+            #     eu = gs.save()
+            #     return Response(status=status.HTTP_201_CREATED)
+            # else:
+            #     event.delete()
+            #     return Response(status=status.HTTP_409_CONFLICT)
+        
+        return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
