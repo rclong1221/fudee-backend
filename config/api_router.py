@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 from fudee.users.api.views import UserViewSet, UserImageViewSet
 from fudee.relationships.api.views import InviteViewSet, RelationshipViewSet, UserGroupViewSet, UserGroupUserViewSet, UserGroupImageViewSet
 from fudee.organizations.api.views import OrganizationViewSet, OrganizationUserViewSet, OrganizationImageViewSet
+from fudee.events.api.views import EventViewSet
 
 if settings.DEBUG:
     router = DefaultRouter()
@@ -20,6 +21,7 @@ router.register("user_group_user", UserGroupUserViewSet)
 router.register("organization", OrganizationViewSet)
 router.register("organization_image", OrganizationImageViewSet)
 router.register("organization_user", OrganizationUserViewSet)
+router.register("event", EventViewSet)
 
 app_name = "api"
 urlpatterns = router.urls
