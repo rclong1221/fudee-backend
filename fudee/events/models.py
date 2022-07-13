@@ -24,7 +24,7 @@ class Event(models.Model):
     user = models.ForeignKey(User, related_name="event_user", on_delete=models.PROTECT)
     date_start = models.DateTimeField(blank=False, null=False)
     date_end = models.DateTimeField(blank=True, null=True)
-    recurrences = RecurrenceField()
+    recurrences = RecurrenceField(blank=True)
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_updated = models.DateField(blank=True, null=True)
     updater_id = models.IntegerField(blank=True, null=True)
