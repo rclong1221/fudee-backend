@@ -41,9 +41,6 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
         data['user'] = self.request.user.id
         data['updater_id'] = self.request.user.id
         
-        print("\n\n\n")
-        print(data)
-        print("\n\n\n")
         serializer = CreateEventSerializer(data=data)
         
         if serializer.is_valid():
@@ -69,4 +66,27 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
             #     event.delete()
             #     return Response(status=status.HTTP_409_CONFLICT)
         
+        return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
+    
+    def update(self, *args, **kwargs):
+        data = self.request.data.copy()
+        data['uuid'] = self.kwargs['uuid']
+        data.pop('user')
+        data['updater_id'] = self.request.user.id
+        instance = None
+        
+        try:
+            instance = self.queryset.get(uuid=data['uuid'])
+        except self.queryset.DoesNotExist:
+            Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        # TODO: Check if user is authorized to edit Event through EventUsers table
+        # if self.request.user.id != instance.user.id
+        #     return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = CreateEventSerializer(instance=instance, data=data, partial=True)
+
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            return Response(status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
