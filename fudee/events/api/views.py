@@ -17,10 +17,10 @@ import uuid as uuid_lib
     
 from fudee.events.api.serializers import \
     GetEventSerializer, CreateEventSerializer, \
-    GetEventUserSerializer, CreateEventUserSerializer
+    GetEventUserSerializer, CreateEventUserSerializer, EventImageSerializer
 
 from fudee.events.models import \
-    Event, EventUser
+    Event, EventUser, EventImage
 
 User = get_user_model()
 
@@ -155,3 +155,34 @@ class EventUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
     def me(self, request):
         serializer = GetEventUserSerializer(request.user, context={"request": request})
         return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+class EventImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+    serializer_class = EventImageSerializer
+    queryset = EventImage.objects.all()
+    parser_classes = (MultiPartParser, FileUploadParser)
+    lookup_field = "uuid"
+    
+    def create(self, *args, **kwargs):
+        data = self.request.data
+        event = None
+        event_user = None
+        
+        try:
+            event = Event.objects.filter(id=data['event'])[0]
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            event_user = EventUser.objects.filter(Q(event=event) & Q(user=self.request.user))[0]
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        if event_user.access != 2:
+            return Response(status.HTTP_404_NOT_FOUND)
+        
+        serializer = EventImageSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
