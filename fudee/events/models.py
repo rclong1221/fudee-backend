@@ -56,3 +56,28 @@ class EventUser(models.Model):
     class Meta:
         unique_together = (('event', 'user'),)
         index_together = (('event', 'user'),)
+
+class EventImage(models.Model):
+    """
+    
+    """
+    uuid = models.UUIDField( # Used by the API to look up the record 
+        db_index=True,
+        unique=True,
+        default=uuid_lib.uuid4,
+        editable=False)
+    image = models.ImageField(blank=True, null=True)
+    event = models.ForeignKey(Event, on_delete=models.PROTECT)
+    date_created = models.DateTimeField(auto_now_add=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        event = None
+        
+        try:
+            event = Event.objects.get(uuid=self.event.uuid)
+        except self.queryset.DoesNotExist:
+            return
+        
+        event.primary_image = self.uuid
+        event.save()
