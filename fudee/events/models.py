@@ -81,3 +81,14 @@ class EventImage(models.Model):
         
         event.primary_image = self.uuid
         event.save()
+
+class EventParam(models.Model):
+    uuid = models.UUIDField(
+        db_index=True,
+        unique=True,
+        default=uuid_lib.uuid4,
+        editable=False)
+    event = models.ForeignKey(Event, related_name='params', on_delete=models.PROTECT)
+    param = models.CharField(max_length=16)
+    value = models.IntegerField()
+    index = models.IntegerField(default=0)
