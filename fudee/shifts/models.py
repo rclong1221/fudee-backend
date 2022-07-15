@@ -7,8 +7,8 @@ from django.utils.translation import gettext_lazy as _
 import uuid as uuid_lib
 
 from datetime import datetime
-from organizations.models import Organization
-from events.models import Event
+from fudee.organizations.models import Organization
+from fudee.events.models import Event
 
 User = get_user_model()
 
