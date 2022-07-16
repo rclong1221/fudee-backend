@@ -17,13 +17,13 @@ class UserSerializer(serializers.ModelSerializer):
 class UserImageSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
     image = serializers.ImageField()
-    user = serializers.IntegerField()
+    user = serializers.UUIDField(format="hex_verbose")
     date_created = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
         """
         """
-        user = User.objects.get(id=validated_data['user'])
+        user = User.objects.get(uuid=validated_data['user'])
         data = User_Image.objects.create(
             image=validated_data['image'],
             user=user
