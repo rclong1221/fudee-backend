@@ -19,13 +19,13 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyM
     queryset = User.objects.all()
     lookup_field = "uuid"
 
-    def get_queryset(self, *args, **kwargs):
-        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
-        try:
-            if self.request.method == 'GET':
-                return self.queryset.filter(uuid=self.request.user.uuid)
-        except User.DoesNotExist:
-            raise http.Http404
+    # def get_queryset(self, *args, **kwargs):
+    #     assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+    #     try:
+    #         if self.request.method == 'GET':
+    #             return self.queryset.filter(uuid=self.request.user.uuid)
+    #     except User.DoesNotExist:
+    #         raise http.Http404
     
     def get_object(self, *args, **kwargs):
         assert isinstance(self.request.user.uuid, uuid_lib.UUID)
@@ -64,17 +64,18 @@ class UserImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, 
     parser_classes = (MultiPartParser, FileUploadParser)
     
     def get_object(self, *args, **kwargs):
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
         try:
-            return User_Image.objects.get(user=self.request.user)
+            return User_Image.objects.get(uuid=self.request.user.uuid)
         except User.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
     
     def retrieve(self, *args, **kwargs):
-        ui = User_Image.objects.filter(user=self.request.user).latest('date_created')
+        ui = User_Image.objects.filter(user__uuid=self.request.user.uuid).latest('date_created')
         
         user_image = {
             'uuid': ui.uuid,
-            'user': ui.user.id,
+            'user': ui.user.uuid,
             'image': ui.image,
             'date_created': ui.date_created
         }
@@ -86,8 +87,8 @@ class UserImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, 
     
     def create(self, *args, **kwargs):
         # if user has R+W (1) or is admin (2)
-        data = self.request.data
-        data['user'] = self.request.user.id
+        data = self.request.data.copy()
+        data['user'] = self.request.user.uuid
         
         serializer = UserImageSerializer(data=data)
 
