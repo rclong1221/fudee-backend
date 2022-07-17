@@ -21,7 +21,7 @@ class GetInviteSerializer(serializers.ModelSerializer):
 
 class CreateInviteSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
-    user = serializers.IntegerField()
+    user = serializers.UUIDField(format="hex_verbose")
     email = serializers.EmailField(max_length=254, write_only=True)
     phone = PhoneNumberField()
     accepted = serializers.BooleanField(read_only=True)
@@ -30,7 +30,7 @@ class CreateInviteSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         """
-        user = User.objects.get(id=validated_data['user'])
+        user = User.objects.get(uuid=validated_data['user'])
         data = Invite.objects.create(
             user=user,
             email=validated_data['email'],

@@ -42,18 +42,18 @@ class InviteViewSet(ListModelMixin, CreateModelMixin, GenericViewSet):
             return CreateInviteSerializer
     
     def get_queryset(self, *args, **kwargs):
-        assert isinstance(self.request.user.id, int)
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
         try:
-            return self.queryset.filter(user=self.request.user.id)
+            return self.queryset.filter(user__id=self.request.user.uuid)
         except User.DoesNotExist:
             raise http.Http404
     
-    # def get_object(self, *args, **kwargs):
-    #     assert isinstance(self.request.user.id, int)
-    #     try:
-    #         return Invite.objects.get(id=self.request.user.id)
-    #     except Invite.DoesNotExist:
-    #         raise http.Http404
+    def get_object(self, *args, **kwargs):
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        try:
+            return Invite.objects.get(user__uuid=self.request.user.uuid)
+        except Invite.DoesNotExist:
+            raise http.Http404
     
     def create(self, *args, **kwargs):
         # Check if user hasn't created a request this past 7 days
@@ -61,22 +61,19 @@ class InviteViewSet(ListModelMixin, CreateModelMixin, GenericViewSet):
             q = None
             
             if self.request.data['email']:
-                q = Invite.objects.filter(user=self.request.user.id, email=self.request.data['email'], date_created__gte=datetime.now()-timedelta(days=7))
+                q = Invite.objects.filter(user__uuid=self.request.user.uuid, email=self.request.data['email'], date_created__gte=datetime.now()-timedelta(days=7))
                 if len(q) > 0:
                     return Response(status=status.HTTP_409_CONFLICT)
             
             if self.request.data['phone']:
-                q = Invite.objects.filter(user=self.request.user.id, phone=self.request.data['phone'], date_created__gte=datetime.now()-timedelta(days=7))
+                q = Invite.objects.filter(user__uuid=self.request.user.uuid, phone=self.request.data['phone'], date_created__gte=datetime.now()-timedelta(days=7))
                 if len(q) > 0:
                     return Response(status=status.HTTP_409_CONFLICT)
         except Invite.DoesNotExist:
             pass
         
-        data = self.request.data
-        
-        # Check if user isn't faking ID
-        if self.request.user.id != data['user']:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        data = self.request.data.copy()
+        data['user'] = self.request.user.uuid
         
         serializer = CreateInviteSerializer(data=data)
         
