@@ -66,8 +66,9 @@ class UserImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, 
     
     def get_object(self, *args, **kwargs):
         assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        ui_uuid = self.kwargs['uuid']
         try:
-            return User_Image.objects.get(uuid=self.request.user.uuid)
+            return User_Image.objects.get(uuid=ui_uuid)
         except User.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
     
