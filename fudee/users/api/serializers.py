@@ -6,6 +6,12 @@ from fudee.users.models import User_Image
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
+    uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
+    date_updated = serializers.DateTimeField(read_only=True)
+    url = serializers.CharField(read_only=True)
+    primary_image = serializers.UUIDField(format="hex_verbose", read_only=True)
+    
     class Meta:
         model = User
         fields = ["uuid", "username", "name", "first_name", "last_name", "middle_name", "is_active", "date_updated", "primary_image", "url"]
