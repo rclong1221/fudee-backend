@@ -5,6 +5,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateMode
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
+from django.db.models import Q
 
 from fudee.users.api.serializers import UserSerializer, UserImageSerializer
 
@@ -71,7 +72,13 @@ class UserImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, 
             return Response(status=status.HTTP_400_BAD_REQUEST)
     
     def retrieve(self, *args, **kwargs):
-        ui = User_Image.objects.filter(user__uuid=self.request.user.uuid).latest('date_created')
+        ui_uuid = self.kwargs['uuid']
+        user_uuid = self.request.user.uuid
+
+        try:
+            ui = User_Image.objects.filter(Q(user__uuid=user_uuid) & Q(uuid=ui_uuid)).latest('date_created')
+        except User_Image.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         
         user_image = {
             'uuid': ui.uuid,
