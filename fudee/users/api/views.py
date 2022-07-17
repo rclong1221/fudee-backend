@@ -36,7 +36,7 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyM
             return Response(status=status.HTTP_404_NOT_FOUND)
     
     def update(self, *args, **kwargs):
-        user = self.get_object(self.request.user.uuid)
+        user = self.get_object()
         serializer = UserSerializer(user, data=self.request.data, context={'request': self.request})
         if serializer.is_valid():
             serializer.save()
