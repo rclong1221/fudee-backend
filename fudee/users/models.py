@@ -36,6 +36,11 @@ class User(AbstractUser):
 
         """
         return reverse("users:detail", kwargs={"username": self.username})
+    
+    def soft_delete(self):
+        print("\n\n\n\n\n")
+        self.is_active = False
+        self.save()
 
 class User_Image(models.Model):
     """
