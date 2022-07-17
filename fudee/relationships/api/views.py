@@ -102,8 +102,8 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
     queryset = Relationship.objects.all()
     lookup_field = "uuid"
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['user1']
+    # filter_backends = [DjangoFilterBackend]
+    # filterset_fields = ['user1']
     
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
@@ -112,38 +112,29 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
             return CreateRelationshipSerializer
 
     def get_queryset(self, *args, **kwargs):
-        assert isinstance(self.request.user.id, int)
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
         # user default
-        user1 = self.request.user.id
+        user1 = self.request.user.uuid
         
-        # if self.request.data['user1'] is not None:
-        #     user = self.request.data['user1']
-        # if self.request.data['user2'] is not None:
-        #     req_user2 = self.request.data['user2']
-            
-        if self.request.user.id != user1:
-            return self.queryset.none()
-        
-        # if self.request.data['user1'] is not None and self.request.data['user2'] is not None:
-        #     return self.queryset.filter(Q(user2=req_user2) | Q(user=req_user))
-        # elif self.request.data['user1'] is  None and self.request.data['user2'] is not None:
-        #     return None
-        return self.queryset.filter(Q(user2=user1) | Q(user1=user1))
+        return self.queryset.filter(Q(user2__uuid=user1) | Q(user1__uuid=user1))
     
-    # def get_object(self, *args, **kwargs):
-    #     assert isinstance(self.request.user, User)
-    #     try:
-    #         return Relationship.objects.filter(Q(user1=self.request.kwargs['uuid']) | Q(user2=self.request.kwargs['uuid'])).first()
-    #     except Relationship.DoesNotExist:
-    #         raise http.Http404
+    def get_object(self, *args, **kwargs):
+        assert isinstance(self.request.kwargs['uuid'], uuid_lib.UUID)
+        try:
+            return Relationship.objects.filter(Q(user1__uuid=self.request.kwargs['uuid']) | Q(user2__uuid=self.request.kwargs['uuid'])).first()
+        except Relationship.DoesNotExist:
+            raise http.Http404
     
-    def list(self, *args, **kwargs):
-        serializer = GetRelationshipSerializer(self.get_queryset(), many=True, context={'request': self.request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    # def list(self, *args, **kwargs):
+    #     serializer = GetRelationshipSerializer(self.get_queryset(), many=True, context={'request': self.request})
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
     
     def create(self, *args, **kwargs):
-        if self.request.user.id != self.request.data['user1'] and self.request.user.id != self.request.data['user2']:
+        data = self.request.data
+        user_uuid = str(self.request.user.uuid)
+        if user_uuid != data['user1'] and user_uuid != data['user2']:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        data['updater_id'] = self.request.user.id
         serializer = CreateRelationshipSerializer(data=self.request.data)
 
         if serializer.is_valid():
@@ -153,16 +144,18 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
     
     def update(self, *args, **kwargs):
         data = {key: self.request.data[key] for key in self.request.data.keys() & {'relationship'}}
-        data['uuid'] = self.kwargs['uuid']
         data['updater_id'] = self.request.user.id
         instance = None
         
         try:
-            instance = self.queryset.get(uuid=data['uuid'])
+            instance = self.queryset.get(uuid=self.kwargs['uuid'])
         except self.queryset.DoesNotExist:
             Response(status=status.HTTP_400_BAD_REQUEST)
+            
+        data = self.request.data
+        user_uuid = str(self.request.user.uuid)
         
-        if self.request.user.id != instance.user1.id and self.request.user.id != instance.user2.id:
+        if user_uuid != data['user1'] and user_uuid != data['user2']:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
         serializer = CreateRelationshipSerializer(instance=instance, data=data, partial=True)
