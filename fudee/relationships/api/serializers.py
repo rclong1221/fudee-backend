@@ -21,7 +21,7 @@ class GetInviteSerializer(serializers.ModelSerializer):
 
 class CreateInviteSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
-    user = serializers.IntegerField()
+    user = serializers.UUIDField(format="hex_verbose")
     email = serializers.EmailField(max_length=254, write_only=True)
     phone = PhoneNumberField()
     accepted = serializers.BooleanField(read_only=True)
@@ -30,7 +30,7 @@ class CreateInviteSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         """
-        user = User.objects.get(id=validated_data['user'])
+        user = User.objects.get(uuid=validated_data['user'])
         data = Invite.objects.create(
             user=user,
             email=validated_data['email'],
@@ -55,10 +55,9 @@ class GetRelationshipSerializer(serializers.ModelSerializer):
         fields = ["uuid", "user1", "user2", "relationship", "date_created", "date_accepted", "date_updated", "updater_id"]
 
 class CreateRelationshipSerializer(serializers.ModelSerializer):
-    uuid = serializers.UUIDField(format="hex_verbose")
-    user1 = serializers.IntegerField()
-    user2 = serializers.IntegerField()
-    relationship = serializers.IntegerField()
+    uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
+    user1 = serializers.UUIDField(format="hex_verbose")
+    user2 = serializers.UUIDField(format="hex_verbose")
     date_created = serializers.DateField(read_only=True)
     date_accepted = serializers.DateField(read_only=True)
     date_updated = serializers.DateField(read_only=True)
@@ -67,13 +66,14 @@ class CreateRelationshipSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         """
-        user1 = User.objects.get(id=validated_data['user1'])
-        user2 = User.objects.get(id=validated_data['user2'])
+        user1 = User.objects.get(uuid=validated_data['user1'])
+        user2 = User.objects.get(uuid=validated_data['user2'])
         data = Relationship.objects.create(
             user1=user1,
             user2=user2,
             relationship=validated_data['relationship'],
-            updater_id=user1.id,
+            date_updated=datetime.now().strftime("%Y-%m-%d"),
+            updater_id=validated_data['updater_id'],
         )
         return data
     
