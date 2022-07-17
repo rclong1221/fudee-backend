@@ -44,8 +44,14 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyM
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def destroy(self, *args, **kwargs):
-        user = self.get_object(self.request.user.uuid)
-        data = dict(self.get_object(self.request.user.uuid))
+        user = self.get_object()
+
+        try:
+            user.soft_delete()
+            return Response(status=status.HTTP_202_ACCEPTED)
+        except self.queryset.DoesNotExist:
+            Response(status=status.HTTP_400_BAD_REQUEST)
+        
         # data.is_active = False # TODO: move to serializer or something
         serializer = UserSerializer(user, data=data, context={'request': self.request})
         if serializer.is_valid():
