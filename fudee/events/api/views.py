@@ -168,12 +168,12 @@ class EventImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin,
         event_user = None
         
         try:
-            event = Event.objects.filter(id=data['event'])[0]
+            event = Event.objects.filter(uuid=data['event'])[0]
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            event_user = EventUser.objects.filter(Q(event=event) & Q(user=self.request.user))[0]
+            event_user = EventUser.objects.filter(Q(event=event) & Q(user__uuid=self.request.user.uuid))[0]
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         

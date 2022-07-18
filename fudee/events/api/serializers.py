@@ -109,13 +109,13 @@ class CreateEventUserSerializer(serializers.ModelSerializer):
 class EventImageSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
     image = serializers.ImageField()
-    event = serializers.IntegerField()
+    event = serializers.UUIDField(format="hex_verbose")
     date_created = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
         """
         """
-        event = Event.objects.get(id=validated_data['event'])
+        event = Event.objects.get(uuid=validated_data['event'])
         data = EventImage.objects.create(
             image=validated_data['image'],
             event=event
