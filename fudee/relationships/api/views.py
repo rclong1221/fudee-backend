@@ -185,8 +185,6 @@ class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
     queryset = User_Group.objects.all()
     lookup_field = "uuid"
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['creator']
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
@@ -200,17 +198,17 @@ class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
     
     def create(self, *args, **kwargs):
         data = {key: self.request.data[key] for key in self.request.data.keys() & {'name'}}
-        data['creator'] = self.request.user.id
+        data['creator'] = self.request.user.uuid
         
         serializer = CreateUserGroupSerializer(data=data)
 
         if serializer.is_valid():
             ug_obj = serializer.save()
             # Create User_Group_User entry for creator
-            ug = User_Group.objects.get(id=ug_obj.id)
+            ug = User_Group.objects.get(uuid=ug_obj.uuid)
             group_user = {
-                'group': ug.id,
-                'user': self.request.user.id,
+                'group': ug.uuid,
+                'user': self.request.user.uuid,
                 'access': 2,     #admin
                 'is_active': True,
                 'updater_id': self.request.user.id,

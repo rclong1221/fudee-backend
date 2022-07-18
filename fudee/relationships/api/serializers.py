@@ -98,13 +98,13 @@ class GetUserGroupSerializer(serializers.ModelSerializer):
 class CreateUserGroupSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
     name = serializers.CharField()
-    creator = serializers.IntegerField()
+    creator = serializers.UUIDField(format="hex_verbose")
     date_created = serializers.DateField(read_only=True)
     
     def create(self, validated_data):
         """
         """
-        user = User.objects.get(id=validated_data['creator'])
+        user = User.objects.get(uuid=validated_data['creator'])
         data = User_Group.objects.create(
             name=validated_data['name'],
             creator=user,
@@ -113,8 +113,6 @@ class CreateUserGroupSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
-        # instance.date_updated = datetime.now().strftime("%Y-%m-%d")
-        # instance.updater_id = validated_data.get('updater_id', instance.updater_id)
         instance.save()
         return instance
     
@@ -132,8 +130,8 @@ class GetUserGroupUserSerializer(serializers.ModelSerializer):
 
 class CreateUserGroupUserSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
-    group = serializers.IntegerField()
-    user = serializers.IntegerField()
+    group = serializers.UUIDField(format="hex_verbose")
+    user = serializers.UUIDField(format="hex_verbose")
     access = serializers.IntegerField()
     is_active = serializers.BooleanField()
     date_accepted = serializers.DateField(read_only=True)
@@ -143,8 +141,8 @@ class CreateUserGroupUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         """
-        user = User.objects.get(id=validated_data['user'])
-        group = User_Group.objects.get(id=validated_data['group'])
+        user = User.objects.get(uuid=validated_data['user'])
+        group = User_Group.objects.get(uuid=validated_data['group'])
         data = User_Group_User.objects.create(
             group=group,
             user=user,
