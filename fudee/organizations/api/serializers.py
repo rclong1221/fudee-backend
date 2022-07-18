@@ -2,6 +2,8 @@ import uuid
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from fudee.organizations.models import Organization, OrganizationUser, Organization_Image
+
+from fudee.users.api.serializers import UserSerializer
     
 from phonenumber_field.modelfields import PhoneNumberField
 from datetime import datetime
@@ -48,12 +50,10 @@ class CreateOrganizationSerializer(serializers.ModelSerializer):
         model = Organization
         fields = ["uuid", "name", "date_created", "date_updated", "updater_id"]
 
-# TODO: class UpdateOrganizationImageSerializer(serializers.ModelSerializer):
-
 class GetOrganizationUserSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
     organization = serializers.IntegerField(read_only=True)
-    user = serializers.IntegerField(read_only=True)
+    user = UserSerializer(read_only=True)
     access = serializers.IntegerField(read_only=True)
     is_active = serializers.BooleanField(read_only=True)
     date_accepted = serializers.DateField(read_only=True)
@@ -66,8 +66,8 @@ class GetOrganizationUserSerializer(serializers.ModelSerializer):
 
 class CreateOrganizationUserSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
-    organization = serializers.IntegerField()
-    user = serializers.IntegerField()
+    organization = serializers.UUIDField(format="hex_verbose")
+    user = serializers.UUIDField(format="hex_verbose")
     access = serializers.IntegerField()
     is_active = serializers.BooleanField()
     date_accepted = serializers.DateField(read_only=True)
@@ -77,8 +77,8 @@ class CreateOrganizationUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         """
-        user = User.objects.get(id=validated_data['user'])
-        organization = Organization.objects.get(id=validated_data['group'])
+        user = User.objects.get(uuid=validated_data['user'])
+        organization = Organization.objects.get(uuid=validated_data['organization'])
         data = OrganizationUser.objects.create(
             organization=organization,
             user=user,
@@ -104,13 +104,13 @@ class CreateOrganizationUserSerializer(serializers.ModelSerializer):
 class OrganizationImageSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
     image = serializers.ImageField()
-    organization = serializers.IntegerField()
+    organization = serializers.UUIDField(format="hex_verbose")
     date_created = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
         """
         """
-        organization = Organization.objects.get(id=validated_data['organization'])
+        organization = Organization.objects.get(uuid=validated_data['organization'])
         data = Organization_Image.objects.create(
             image=validated_data['image'],
             organization=organization

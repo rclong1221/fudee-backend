@@ -49,11 +49,11 @@ class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
         if serializer.is_valid():
             org_obj = serializer.save()
             # Create Organization entry for creator
-            org = Organization.objects.get(id=org_obj.id)
+            org = Organization.objects.get(uuid=org_obj.uuid)
             # Create OrganizationUser entry
             org_user = {
-                'organization': org.id,
-                'user': self.request.user.id,
+                'organization': org.uuid,
+                'user': self.request.user.uuid,
                 'access': 2,     #admin
                 'is_active': True,
                 'updater_id': self.request.user.id,
@@ -69,10 +69,12 @@ class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
     
     def update(self, *args, **kwargs):
-        data = {key: self.request.data[key] for key in self.request.data.keys() & {'organization'}}
+        data = self.request.data
         data['uuid'] = self.kwargs['uuid']
         data['updater_id'] = self.request.user.id
         instance = None
+        
+        print(data)
         
         try:
             instance = self.queryset.get(uuid=data['uuid'])
@@ -95,7 +97,7 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
     lookup_field = "uuid"
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['user', 'organization']
+    filterset_fields = []
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
@@ -113,7 +115,7 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
         data['updater_id'] = self.request.user.id
         max_access = -1
         try:
-            instance = self.queryset.get(user=self.request.user.id, access__gte=1)
+            instance = self.queryset.get(user__uuid=self.request.user.uuid, access__gte=1)
             max_access = instance.access
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -121,7 +123,7 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
         if data['access'] > max_access:
             data['access'] = max_access
         
-        data['is_active'] = False
+        data['is_active'] = True
         
         serializer = CreateOrganizationUserSerializer(data=data)
 
@@ -131,7 +133,11 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
     
     def update(self, *args, **kwargs):
-        data = {key: self.request.data[key] for key in self.request.data.keys() & {'access', 'is_active'}}
+        data = self.request.data
+        
+        data.pop('organization')
+        data.pop('user')
+        
         data['uuid'] = self.kwargs['uuid']
         data['updater_id'] = self.request.user.id
         instance = None
@@ -141,8 +147,8 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        if self.request.user.id != instance.user.id:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        # if self.request.user.uuid != instance.user.uuid:
+        #     return Response(status=status.HTTP_404_NOT_FOUND)
         
         serializer = CreateOrganizationUserSerializer(instance=instance, data=data, partial=True)
 
@@ -166,14 +172,14 @@ class OrganizationImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewS
         data = self.request.data
         org = None
         org_user = None
-        
+        print(data['organization'])
         try:
-            org = Organization.objects.filter(id=data['organization'])[0]
+            org = Organization.objects.filter(uuid=data['organization'])[0]
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            org_user = OrganizationUser.objects.filter(Q(organization=org) & Q(user=self.request.user))[0]
+            org_user = OrganizationUser.objects.filter(Q(organization__uuid=org.uuid) & Q(user__uuid=self.request.user.uuid))[0]
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
