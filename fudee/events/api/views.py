@@ -121,7 +121,7 @@ class EventUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
         if data['access'] > max_access:
             data['access'] = max_access
         
-        data['is_active'] = False
+        data['is_active'] = True
         
         serializer = CreateEventUserSerializer(data=data)
 
@@ -173,7 +173,7 @@ class EventImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin,
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            event_user = EventUser.objects.filter(Q(event=event) & Q(user__uuid=self.request.user.uuid))[0]
+            event_user = EventUser.objects.filter(Q(event__uuid=event.uuid) & Q(user__uuid=self.request.user.uuid))[0]
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
