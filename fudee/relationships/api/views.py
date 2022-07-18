@@ -164,6 +164,16 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
             self.perform_update(serializer)
             return Response(status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
+    
+    def destroy(self, *args, **kwargs):
+        user1 = self.request.user.uuid
+        instance = Relationship.objects.filter(Q(user1__uuid=user1) | Q(user2__uuid=user1) & Q(uuid=self.kwargs['uuid'])).first()
+
+        try:
+            instance.delete()
+            return Response(status=status.HTTP_202_ACCEPTED)
+        except self.queryset.DoesNotExist:
+            Response(status=status.HTTP_400_BAD_REQUEST)
 
     # @action(detail=False)
     # def me(self, request):
