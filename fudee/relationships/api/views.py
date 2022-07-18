@@ -362,7 +362,7 @@ class UserGroupImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet)
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            ugu = User_Group_User.objects.filter(Q(group=ug) & Q(user=self.request.user))[0]
+            ugu = User_Group_User.objects.filter(Q(group__uuid=ug) & Q(user__uuid=self.request.user))[0]
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
