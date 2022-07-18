@@ -16,7 +16,7 @@ class GetEventSerializer(serializers.ModelSerializer):
 
 class CreateEventSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
-    user = serializers.IntegerField()
+    user = serializers.UUIDField(format="hex_verbose")
     recurrences = serializers.CharField(allow_blank=True)
     date_updated = serializers.DateField(read_only=True)
     updater_id = serializers.IntegerField(read_only=True)
@@ -26,7 +26,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         """
-        user = User.objects.get(id=validated_data['user'])
+        user = User.objects.get(uuid=validated_data['user'])
         data = Event.objects.create(
             title=validated_data['title'],
             description=validated_data['description'],
@@ -59,6 +59,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
 class GetEventUserSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
     access = serializers.IntegerField(read_only=True)
+    event = GetEventSerializer(read_only=True)
     is_active = serializers.BooleanField(read_only=True)
     date_accepted = serializers.DateField(read_only=True)
     date_updated = serializers.DateField(read_only=True)
@@ -70,8 +71,8 @@ class GetEventUserSerializer(serializers.ModelSerializer):
 
 class CreateEventUserSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
-    event = serializers.IntegerField()
-    user = serializers.IntegerField()
+    event = serializers.UUIDField(format="hex_verbose")
+    user = serializers.UUIDField(format="hex_verbose")
     access = serializers.IntegerField()
     is_active = serializers.BooleanField()
     date_accepted = serializers.DateField(read_only=True)
@@ -81,8 +82,8 @@ class CreateEventUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         """
-        user = User.objects.get(id=validated_data['user'])
-        event = Event.objects.get(id=validated_data['event'])
+        user = User.objects.get(uuid=validated_data['user'])
+        event = Event.objects.get(uuid=validated_data['event'])
         data = EventUser.objects.create(
             event=event,
             user=user,
