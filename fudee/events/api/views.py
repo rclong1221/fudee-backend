@@ -39,7 +39,7 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
         
     def create(self, *args, **kwargs):
         data = self.request.data.copy()
-        data['user'] = self.request.user.id
+        data['user'] = self.request.user.uuid
         data['updater_id'] = self.request.user.id
         
         serializer = CreateEventSerializer(data=data)
@@ -48,11 +48,11 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
             event_obj = serializer.save()
         
             # Create Event entry for creator
-            event = Event.objects.get(id=event_obj.id)
+            event = Event.objects.get(uuid=event_obj.uuid)
             # Create EventUser entry
             event_user = {
-                'event': event.id,
-                'user': self.request.user.id,
+                'event': event.uuid,
+                'user': self.request.user.uuid,
                 'access': 2,     #admin
                 'is_active': True,
                 'updater_id': self.request.user.id,
@@ -113,7 +113,7 @@ class EventUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
         data['updater_id'] = self.request.user.id
         max_access = -1
         try:
-            instance = self.queryset.get(user=self.request.user.id, access__gte=1)
+            instance = self.queryset.get(user__uuid=self.request.user.uuid, access__gte=1)
             max_access = instance.access
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -121,7 +121,7 @@ class EventUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
         if data['access'] > max_access:
             data['access'] = max_access
         
-        data['is_active'] = False
+        data['is_active'] = True
         
         serializer = CreateEventUserSerializer(data=data)
 
@@ -141,7 +141,7 @@ class EventUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        if self.request.user.id != instance.user.id:
+        if self.request.user.uuid != instance.user.uuid:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
         serializer = CreateEventUserSerializer(instance=instance, data=data, partial=True)
@@ -168,12 +168,12 @@ class EventImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin,
         event_user = None
         
         try:
-            event = Event.objects.filter(id=data['event'])[0]
+            event = Event.objects.filter(uuid=data['event'])[0]
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            event_user = EventUser.objects.filter(Q(event=event) & Q(user=self.request.user))[0]
+            event_user = EventUser.objects.filter(Q(event__uuid=event.uuid) & Q(user__uuid=self.request.user.uuid))[0]
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
