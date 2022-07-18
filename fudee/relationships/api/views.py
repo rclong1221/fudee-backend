@@ -233,7 +233,7 @@ class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
         except self.queryset.DoesNotExist:
             Response(status=status.HTTP_400_BAD_REQUEST)
         
-        if self.request.user.id != instance.creator.id:
+        if self.request.user.uuid != instance.creator.uuid:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
         serializer = CreateUserGroupSerializer(instance=instance, data=data, partial=True)
@@ -252,8 +252,6 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
     queryset = User_Group_User.objects.all()
     lookup_field = "uuid"
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['user', 'group']
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
@@ -271,7 +269,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
         data['updater_id'] = self.request.user.id
         max_access = -1
         try:
-            instance = self.queryset.get(user=self.request.user.id, access__gte=1)
+            instance = self.queryset.get(user__uuid=self.request.user.uuid, access__gte=1)
             max_access = instance.access
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -279,7 +277,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
         if data['access'] > max_access:
             data['access'] = max_access
         
-        data['is_active'] = False
+        data['is_active'] = True
         
         serializer = CreateUserGroupUserSerializer(data=data)
 
@@ -299,7 +297,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        if self.request.user.id != instance.user.id:
+        if self.request.user.uuid != instance.user.uuid:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
         serializer = CreateUserGroupUserSerializer(instance=instance, data=data, partial=True)
