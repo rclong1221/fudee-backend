@@ -168,13 +168,13 @@ class CreateUserGroupUserSerializer(serializers.ModelSerializer):
 class UserGroupImageSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
     image = serializers.ImageField()
-    user_group = serializers.IntegerField()
+    user_group = serializers.UUIDField(format="hex_verbose")
     date_created = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
         """
         """
-        user_group = User_Group.objects.get(id=validated_data['user_group'])
+        user_group = User_Group.objects.get(uuid=validated_data['user_group'])
         data = User_Group_Image.objects.create(
             image=validated_data['image'],
             user_group=user_group

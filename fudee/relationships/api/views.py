@@ -357,7 +357,7 @@ class UserGroupImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet)
         ugu = None
         
         try:
-            ug = User_Group.objects.filter(id=data['user_group'])[0]
+            ug = User_Group.objects.filter(uuid=data['user_group'])[0]
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
