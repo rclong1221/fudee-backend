@@ -18,8 +18,8 @@ class Shift(models.Model):
         unique=True,
         default=uuid_lib.uuid4,
         editable=False)
-    employee = models.ForeignKey(User, related_name="employee", on_delete=models.PROTECT)
-    organization = models.ForeignKey(Organization, related_name="organization", on_delete=models.PROTECT)
+    employee = models.ForeignKey(User, related_name="employee", on_delete=models.PROTECT, blank=True, null=True)
+    organization = models.ForeignKey(Organization, related_name="organization", on_delete=models.PROTECT, blank=True, null=True)
     event = models.ForeignKey(Event, related_name="event", on_delete=models.PROTECT)
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_updated = models.DateField(blank=True, null=True)
