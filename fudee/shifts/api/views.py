@@ -138,25 +138,20 @@ class ShiftViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, Destroy
         try:
             org_user = OrganizationUser.objects.filter(Q(organization__uuid=data['organization']) & Q(user__uuid=data['employee'])).first()
         except OrganizationUser.DoesNotExist:
-            print("\n\n\nhere1")
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
         # Check if user is OrganizationAdmin
         try:
             org_user = OrganizationUser.objects.filter(Q(organization__uuid=data['organization']) & Q(user__uuid=self.request.user.uuid)).first()
         except OrganizationUser.DoesNotExist:
-            print("\n\n\nhere2")
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
         if org_user.access < 2:
-            print("\n\n\nhere3")
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            print(data['uuid'])
             instance = self.queryset.get(uuid=data['uuid'])
         except:
-            print("\n\n\nhere4")
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
         # if self.request.user.uuid != instance.user.uuid:
