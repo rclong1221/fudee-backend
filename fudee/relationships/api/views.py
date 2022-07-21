@@ -268,11 +268,6 @@ class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
             return Response(status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
 
-    # @action(detail=False)
-    # def me(self, request):
-    #     serializer = GetUserGroupSerializer(request.user, context={"request": request})
-    #     return Response(status=status.HTTP_200_OK, data=serializer.data)
-
 class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = User_Group_User.objects.all()
     lookup_field = "uuid"
@@ -349,11 +344,6 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
             self.perform_update(serializer)
             return Response(status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
-
-    @action(detail=False)
-    def me(self, request):
-        serializer = GetUserGroupUserSerializer(request.user, context={"request": request})
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 class UserGroupImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = UserGroupImageSerializer
