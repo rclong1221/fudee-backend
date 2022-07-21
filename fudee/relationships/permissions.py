@@ -12,7 +12,7 @@ class IsRelationshipUser(permissions.BasePermission):
             for o in obj:
                 if o.user1 != request.user and o.user2 != request.user:
                     return False
-        elif obj != request.user:
+        elif obj.user1 != request.user and obj.user2 != request.user:
             return False
         return True
 
