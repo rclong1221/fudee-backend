@@ -25,10 +25,8 @@ from fudee.relationships.api.serializers import \
 
 from fudee.relationships.models import \
     Invite, Relationship, User_Group, User_Group_User, User_Group_Image
-    
-from fudee.relationships.permissions import IsInviteOwner
 
-from fudee.relationships.permissions import IsRelationshipUser
+from fudee.relationships.permissions import IsRelationshipUser, IsUserGroupAdmin
 
 User = get_user_model()
 
@@ -36,7 +34,7 @@ class InviteViewSet(ListModelMixin, CreateModelMixin, GenericViewSet):
     # serializer = CreateInviteSerializer
     queryset = Invite.objects.all()
     lookup_field = "uuid"
-    permission_classes = [permissions.IsAuthenticated, IsInviteOwner]
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['email', 'phone']
 
@@ -194,17 +192,33 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
 class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = User_Group.objects.all()
     lookup_field = "uuid"
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsUserGroupAdmin]
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
             return GetUserGroupSerializer
         if self.action == 'create' or self.action == 'update':
             return CreateUserGroupSerializer
+    
+    def get_object(self, *args, **kwargs):
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        user = self.request.user
+        ugu_obj = None
+        
+        try:
+            ugu_obj = User_Group_User.objects.get(Q(user=user) & Q(group__uuid=self.kwargs['uuid']))
+        except User_Group_User.DoesNotExist:
+            raise http.Http404
+        
+        self.check_object_permissions(self.request, ugu_obj)
+        ug_obj = None
+        
+        try:
+            ug_obj = self.queryset.get(uuid=self.kwargs['uuid'])
+        except User_Group.DoesNotExist:
+            raise http.Http404
 
-    # def get_queryset(self, *args, **kwargs):
-    #     assert isinstance(self.request.user.id, int)
-    #     return self.queryset.filter(id=self.request.user.id)
+        return ug_obj
     
     def create(self, *args, **kwargs):
         data = {key: self.request.data[key] for key in self.request.data.keys() & {'name'}}
