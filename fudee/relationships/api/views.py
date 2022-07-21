@@ -12,7 +12,7 @@ from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, CreateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
+from rest_framework.parsers import MultiPartParser, FileUploadParser
 
 import uuid as uuid_lib
 
@@ -25,6 +25,8 @@ from fudee.relationships.api.serializers import \
 
 from fudee.relationships.models import \
     Invite, Relationship, User_Group, User_Group_User, User_Group_Image
+    
+from fudee.relationships.permissions import IsInviteOwner
 
 from fudee.relationships.permissions import IsRelationshipUser
 
@@ -34,7 +36,7 @@ class InviteViewSet(ListModelMixin, CreateModelMixin, GenericViewSet):
     # serializer = CreateInviteSerializer
     queryset = Invite.objects.all()
     lookup_field = "uuid"
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsInviteOwner]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['email', 'phone']
 
