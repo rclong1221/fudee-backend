@@ -184,12 +184,6 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
         except self.queryset.DoesNotExist:
             Response(status=status.HTTP_400_BAD_REQUEST)
 
-    # @action(detail=False)
-    # def me(self, request):
-    #     serializer = RelationshipSerializer(request.user, context={"request": request})
-    #     return Response(status=status.HTTP_200_OK, data=serializer.data)
-
-
 class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = User_Group.objects.all()
     lookup_field = "uuid"
@@ -349,58 +343,19 @@ class UserGroupImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet)
     serializer_class = UserGroupImageSerializer
     queryset = User_Group_Image.objects.all()
     parser_classes = (MultiPartParser, FileUploadParser)
+    permission_classes = [permissions.IsAuthenticated, IsUserGroupUser]
     lookup_field = "uuid"
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['user_group']
-    
-    # def get_object(self, *args, **kwargs):
-    #     try:
-    #         return User_Group_Image.objects.get(user=self.request.user)
-    #     except User.DoesNotExist:
-    #         return Response(status=status.HTTP_400_BAD_REQUEST)
-    
-    # def retrieve(self, *args, **kwargs):
-    #     # get requested User Group Image
-    #     ugi = User_Group_Image.objects.filter(group=self.request.data['user_group']).latest('date_created')
-        
-    #     # get user's user group credentials
-        
-        
-    #     # if user doesnt have credentials 404
-        
-        
-    #     # else create/update user group image
-        
-        
-    #     user_group_image = {
-    #         'uuid': ugi.uuid,
-    #         'user_group': ugi.user_group.id,
-    #         'image': ugi.image,
-    #         'date_created': ugi.date_created
-    #     }
-
-    #     serializer = UserGroupImageSerializer(data=user_group_image)
-    #     if serializer.is_valid():
-    #         return Response(serializer.data, status=status.HTTP_200_OK)
-    #     return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
     
     def create(self, *args, **kwargs):
         data = self.request.data
-        ug = None
         ugu = None
         
         try:
-            ug = User_Group.objects.filter(uuid=data['user_group'])[0]
-        except:
+            ugu = User_Group_User.objects.get(Q(group__uuid=data['user_group']) & Q(user=self.request.user))
+        except User_Group_User.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            ugu = User_Group_User.objects.filter(Q(group__uuid=ug) & Q(user__uuid=self.request.user))[0]
-        except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        if ugu.access != 2:
-            return Response(status.HTTP_404_NOT_FOUND)
+        print(ugu)
+        self.check_object_permissions(self.request, ugu)
         
         serializer = UserGroupImageSerializer(data=data)
 
