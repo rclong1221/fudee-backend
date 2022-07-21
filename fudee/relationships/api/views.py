@@ -175,7 +175,8 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
     
     def destroy(self, *args, **kwargs):
         user1 = self.request.user.uuid
-        instance = Relationship.objects.filter(Q(user1__uuid=user1) | Q(user2__uuid=user1) & Q(uuid=self.kwargs['uuid'])).first()
+        instance = self.get_object()
+        self.check_object_permissions(self.request, instance)
 
         try:
             instance.delete()
