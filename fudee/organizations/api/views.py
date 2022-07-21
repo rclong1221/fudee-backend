@@ -21,13 +21,15 @@ from fudee.organizations.api.serializers import \
 
 from fudee.organizations.models import \
     Organization, OrganizationUser, Organization_Image
+    
+from fudee.organizations.permissions import IsOrganizationUser
 
 User = get_user_model()
 
 class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = Organization.objects.all()
     lookup_field = "uuid"
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOrganizationUser]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = []
     
@@ -36,6 +38,26 @@ class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
             return GetOrganizationSerializer
         if self.action == 'create' or self.action == 'update':
             return CreateOrganizationSerializer
+
+    def get_object(self, *args, **kwargs):
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        user = self.request.user
+        org_user_obj = None
+        
+        try:
+            org_user_obj = OrganizationUser.objects.get(Q(user=user) & Q(organization__uuid=self.kwargs['uuid']))
+        except OrganizationUser.DoesNotExist:
+            raise http.Http404
+        
+        self.check_object_permissions(self.request, org_user_obj)
+        org_obj = None
+        
+        try:
+            org_obj = self.queryset.get(uuid=self.kwargs['uuid'])
+        except Organization.DoesNotExist:
+            raise http.Http404
+
+        return org_obj
     
     def list(self, *args, **kwargs):
         serializer = GetOrganizationSerializer(self.get_queryset(), many=True, context={'request': self.request})
@@ -74,16 +96,10 @@ class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
         data['updater_id'] = self.request.user.id
         instance = None
         
-        print(data)
-        
         try:
-            instance = self.queryset.get(uuid=data['uuid'])
-        except self.queryset.DoesNotExist:
+            instance = self.get_object()
+        except Organization.DoesNotExist:
             Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        # TODO: Check if user is authorized to edit Organization through OrganizationUsers table
-        # if self.request.user.id != instance.user1.id and self.request.user.id != instance.user2.id:
-        #     return Response(status=status.HTTP_404_NOT_FOUND)
         
         serializer = CreateOrganizationSerializer(instance=instance, data=data, partial=True)
 
