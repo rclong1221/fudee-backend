@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status, permissions
 from rest_framework.decorators import action
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
+from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
+from rest_framework.parsers import MultiPartParser, FileUploadParser
 from django.db.models import Q
 
 from fudee.users.api.serializers import UserSerializer, UserImageSerializer
@@ -78,9 +78,6 @@ class UserImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, 
         return obj
     
     def retrieve(self, *args, **kwargs):
-        ui_uuid = self.kwargs['uuid']
-        user_uuid = self.request.user.uuid
-
         try:
             ui = self.get_object()
         except User_Image.DoesNotExist:
