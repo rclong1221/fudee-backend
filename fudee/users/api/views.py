@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
 from rest_framework.response import Response
@@ -11,29 +11,27 @@ from fudee.users.api.serializers import UserSerializer, UserImageSerializer
 
 from fudee.users.models import User_Image
 
+from fudee.users.permissions import IsUserOwner, IsUserImageOwner
+
 User = get_user_model()
 
 import uuid as uuid_lib
 
-class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+class UserViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
     lookup_field = "uuid"
-
-    # def get_queryset(self, *args, **kwargs):
-    #     assert isinstance(self.request.user.uuid, uuid_lib.UUID)
-    #     try:
-    #         if self.request.method == 'GET':
-    #             return self.queryset.filter(uuid=self.request.user.uuid)
-    #     except User.DoesNotExist:
-    #         raise http.Http404
+    permission_classes = [permissions.IsAuthenticated, IsUserOwner]
     
     def get_object(self, *args, **kwargs):
         assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        obj = None
         try:
-            return User.objects.get(uuid=self.request.user.uuid)
+            obj =  User.objects.get(uuid=self.kwargs['uuid'])
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        self.check_object_permissions(self.request, obj)
+        return obj
     
     def update(self, *args, **kwargs):
         user = self.get_object()
@@ -45,14 +43,12 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyM
     
     def destroy(self, *args, **kwargs):
         user = self.get_object()
-
         try:
             user.soft_delete()
             return Response(status=status.HTTP_202_ACCEPTED)
         except self.queryset.DoesNotExist:
             Response(status=status.HTTP_400_BAD_REQUEST)
         
-        # data.is_active = False # TODO: move to serializer or something
         serializer = UserSerializer(user, data=data, context={'request': self.request})
         if serializer.is_valid():
             serializer.save()
@@ -69,21 +65,24 @@ class UserImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, 
     queryset = User_Image.objects.all()
     lookup_field = "uuid"
     parser_classes = (MultiPartParser, FileUploadParser)
+    permission_classes = [permissions.IsAuthenticated, IsUserImageOwner]
     
     def get_object(self, *args, **kwargs):
         assert isinstance(self.request.user.uuid, uuid_lib.UUID)
-        ui_uuid = self.kwargs['uuid']
+        obj = None
         try:
-            return User_Image.objects.get(uuid=ui_uuid)
+            obj = self.queryset.get(uuid=self.kwargs['uuid'])
         except User.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        self.check_object_permissions(self.request, obj)
+        return obj
     
     def retrieve(self, *args, **kwargs):
         ui_uuid = self.kwargs['uuid']
         user_uuid = self.request.user.uuid
 
         try:
-            ui = User_Image.objects.filter(Q(user__uuid=user_uuid) & Q(uuid=ui_uuid)).latest('date_created')
+            ui = self.get_object()
         except User_Image.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
