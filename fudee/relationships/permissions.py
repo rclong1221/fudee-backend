@@ -15,3 +15,18 @@ class IsRelationshipUser(permissions.BasePermission):
         elif obj != request.user:
             return False
         return True
+
+class IsUserGroupAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            return True
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        
+        print("\n\n\nCHOI\n\n\n")
+        if obj.user != request.user:
+            return False
+        if obj.access != 2:
+            return False
+        return True
