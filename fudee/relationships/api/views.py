@@ -26,7 +26,7 @@ from fudee.relationships.api.serializers import \
 from fudee.relationships.models import \
     Invite, Relationship, User_Group, User_Group_User, User_Group_Image
 
-from fudee.relationships.permissions import IsRelationshipUser, IsUserGroupAdmin
+from fudee.relationships.permissions import IsRelationshipUser, IsUserGroupAdmin, IsUserGroupUser
 
 User = get_user_model()
 
@@ -275,7 +275,7 @@ class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
 class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = User_Group_User.objects.all()
     lookup_field = "uuid"
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsUserGroupUser]
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
@@ -283,9 +283,27 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
         if self.action == 'create' or self.action == 'update':
             return CreateUserGroupUserSerializer
 
-    # def get_queryset(self, *args, **kwargs):
-    #     assert isinstance(self.request.user.id, int)
-    #     return self.queryset.filter(id=self.request.user.id)
+    def get_object(self, *args, **kwargs):
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        
+        ug_obj = None
+        
+        try:
+            ug_obj = self.queryset.get(uuid=self.kwargs['uuid'])
+        except User_Group.DoesNotExist:
+            raise http.Http404
+        
+        user = self.request.user
+        ugu_obj = None
+        
+        try:
+            ugu_obj = self.queryset.get(Q(user=user) & Q(group=ug_obj.group))
+        except User_Group_User.DoesNotExist:
+            raise http.Http404
+        
+        self.check_object_permissions(self.request, ugu_obj)
+
+        return ug_obj
     
     def create(self, *args, **kwargs):
         # if user has R+W (1) or is admin (2)
@@ -317,7 +335,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
         instance = None
 
         try:
-            instance = self.queryset.get(uuid=data['uuid'])
+            instance = self.get_object()
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
