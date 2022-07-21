@@ -7,12 +7,19 @@ from fudee.events.models import Event
 
 from datetime import datetime
 
+from fudee.organizations.api.serializers import GetOrganizationSerializer
+from fudee.users.api.serializers import UserSerializer
+from fudee.events.api.serializers import GetEventSerializer
+
 User = get_user_model()
 
 class GetShiftSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
     date_updated = serializers.DateField(read_only=True)
     updater_id = serializers.IntegerField(read_only=True)
+    employee = UserSerializer(read_only=True)
+    event = GetEventSerializer(read_only=True)
+    organization = GetOrganizationSerializer(read_only=True)
     
     class Meta:
         model = Shift
