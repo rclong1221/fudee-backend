@@ -1,3 +1,4 @@
+from ast import Is
 from cgitb import lookup
 from datetime import datetime, timedelta
 from multiprocessing import context
@@ -26,6 +27,8 @@ from fudee.relationships.models import \
     Invite, Relationship, User_Group, User_Group_User, User_Group_Image
     
 from fudee.relationships.permissions import IsInviteOwner
+
+from fudee.relationships.permissions import IsRelationshipUser
 
 User = get_user_model()
 
@@ -103,7 +106,7 @@ class InviteViewSet(ListModelMixin, CreateModelMixin, GenericViewSet):
 class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = Relationship.objects.all()
     lookup_field = "uuid"
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsRelationshipUser]
     # filter_backends = [DjangoFilterBackend]
     # filterset_fields = ['user1']
     
@@ -117,19 +120,21 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
         assert isinstance(self.request.user.uuid, uuid_lib.UUID)
         # user default
         user1 = self.request.user.uuid
+        obj = None
         
-        return self.queryset.filter(Q(user2__uuid=user1) | Q(user1__uuid=user1))
+        try:
+            obj = self.queryset.filter(Q(user2__uuid=user1) | Q(user1__uuid=user1))
+        except Relationship.DoesNotExist:
+            raise http.Http404
+        self.check_object_permissions(self.request, obj)
+        return obj
     
     def get_object(self, *args, **kwargs):
         assert isinstance(self.request.user.uuid, uuid_lib.UUID)
         try:
-            return Relationship.objects.filter(Q(user1__uuid=self.kwargs['uuid']) | Q(user2__uuid=self.kwargs['uuid'])).first()
+            return Relationship.objects.get(uuid=self.kwargs['uuid'])
         except Relationship.DoesNotExist:
             raise http.Http404
-    
-    # def list(self, *args, **kwargs):
-    #     serializer = GetRelationshipSerializer(self.get_queryset(), many=True, context={'request': self.request})
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
     
     def create(self, *args, **kwargs):
         data = self.request.data
@@ -150,7 +155,7 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
         instance = None
         
         try:
-            instance = self.queryset.get(uuid=self.kwargs['uuid'])
+            instance = self.get_object()
         except self.queryset.DoesNotExist:
             Response(status=status.HTTP_400_BAD_REQUEST)
             
