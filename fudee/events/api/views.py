@@ -22,12 +22,14 @@ from fudee.events.api.serializers import \
 from fudee.events.models import \
     Event, EventUser, EventImage
 
+from fudee.events.permissions import IsEventUser
+
 User = get_user_model()
 
 class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = Event.objects.all()
     lookup_field = "uuid"
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEventUser]
     # filter_backends = [DjangoFilterBackend]
     # filterset_fields = "__all__"
         
@@ -36,6 +38,26 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
             return GetEventSerializer
         if self.action == 'create' or self.action == 'update':
             return CreateEventSerializer
+    
+    def get_object(self, *args, **kwargs):
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        user = self.request.user
+        event_user_obj = None
+        
+        try:
+            event_user_obj = EventUser.objects.get(Q(user=user) & Q(event__uuid=self.kwargs['uuid']))
+        except EventUser.DoesNotExist:
+            raise http.Http404
+        
+        self.check_object_permissions(self.request, event_user_obj)
+        event_obj = None
+        
+        try:
+            event_obj = self.queryset.get(uuid=self.kwargs['uuid'])
+        except Event.DoesNotExist:
+            raise http.Http404
+
+        return event_obj
         
     def create(self, *args, **kwargs):
         data = self.request.data.copy()
@@ -70,18 +92,17 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
     def update(self, *args, **kwargs):
         data = self.request.data.copy()
         data['uuid'] = self.kwargs['uuid']
-        data.pop('user')
+        try:
+            data.pop('user')
+        except:
+            pass
         data['updater_id'] = self.request.user.id
         instance = None
         
         try:
-            instance = self.queryset.get(uuid=data['uuid'])
-        except self.queryset.DoesNotExist:
+            instance = self.get_object()
+        except Event.DoesNotExist:
             Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        # TODO: Check if user is authorized to edit Event through EventUsers table
-        # if self.request.user.id != instance.user.id
-        #     return Response(status=status.HTTP_404_NOT_FOUND)
         
         serializer = CreateEventSerializer(instance=instance, data=data, partial=True)
 
@@ -93,7 +114,7 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
 class EventUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = EventUser.objects.all()
     lookup_field = "uuid"
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEventUser]
     # filter_backends = [DjangoFilterBackend]
     # filterset_fields = ['user', 'event']
 
@@ -102,10 +123,27 @@ class EventUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
             return GetEventUserSerializer
         if self.action == 'create' or self.action == 'update':
             return CreateEventUserSerializer
-
-    # def get_queryset(self, *args, **kwargs):
-    #     assert isinstance(self.request.user.id, int)
-    #     return self.queryset.filter(id=self.request.user.id)
+        
+    def get_object(self, *args, **kwargs):
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        event_obj = None
+        
+        try:
+            event_obj = self.queryset.get(uuid=self.kwargs['uuid'])
+        except Event.DoesNotExist:
+            raise http.Http404
+        
+        user = self.request.user
+        event_user_obj = None
+        
+        try:
+            event_user_obj = self.queryset.get(Q(user=user) & Q(event=event_obj.event))
+        except EventUser.DoesNotExist:
+            raise http.Http404
+        
+        self.check_object_permissions(self.request, event_user_obj)
+        
+        return event_obj
     
     def create(self, *args, **kwargs):
         # if user has R+W (1) or is admin (2)
@@ -137,7 +175,7 @@ class EventUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
         instance = None
 
         try:
-            instance = self.queryset.get(uuid=data['uuid'])
+            instance = self.get_object()
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
