@@ -131,10 +131,13 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
     
     def get_object(self, *args, **kwargs):
         assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        obj = None
         try:
-            return Relationship.objects.get(uuid=self.kwargs['uuid'])
+            obj = Relationship.objects.get(uuid=self.kwargs['uuid'])
         except Relationship.DoesNotExist:
             raise http.Http404
+        self.check_object_permissions(self.request, obj)
+        return obj
     
     def create(self, *args, **kwargs):
         data = self.request.data

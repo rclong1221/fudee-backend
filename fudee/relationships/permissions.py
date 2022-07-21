@@ -1,8 +1,6 @@
 from rest_framework import permissions
 from collections.abc import Iterable
 
-
-     # e is iterable
 class IsRelationshipUser(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user.is_authenticated:
