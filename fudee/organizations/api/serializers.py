@@ -52,7 +52,7 @@ class CreateOrganizationSerializer(serializers.ModelSerializer):
 
 class GetOrganizationUserSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
-    organization = serializers.IntegerField(read_only=True)
+    organization = GetOrganizationSerializer(read_only=True)
     user = UserSerializer(read_only=True)
     access = serializers.IntegerField(read_only=True)
     is_active = serializers.BooleanField(read_only=True)

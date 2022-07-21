@@ -26,7 +26,7 @@ from fudee.relationships.api.serializers import \
 from fudee.relationships.models import \
     Invite, Relationship, User_Group, User_Group_User, User_Group_Image
 
-from fudee.relationships.permissions import IsRelationshipUser, IsUserGroupAdmin, IsUserGroupUser
+from fudee.relationships.permissions import IsRelationshipUser, IsUserGroupUser
 
 User = get_user_model()
 
@@ -187,7 +187,7 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
 class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = User_Group.objects.all()
     lookup_field = "uuid"
-    permission_classes = [permissions.IsAuthenticated, IsUserGroupAdmin]
+    permission_classes = [permissions.IsAuthenticated, IsUserGroupUser]
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':

@@ -121,15 +121,33 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
         if self.action == 'create' or self.action == 'update':
             return CreateOrganizationUserSerializer
 
-    # def get_queryset(self, *args, **kwargs):
-    #     assert isinstance(self.request.user.id, int)
-    #     return self.queryset.filter(id=self.request.user.id)
+    def get_object(self, *args, **kwargs):
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        org_obj = None
+        
+        try:
+            org_obj = self.queryset.get(uuid=self.kwargs['uuid'])
+        except Organization.DoesNotExist:
+            raise http.Http404
+        
+        user = self.request.user
+        org_user_obj = None
+        
+        try:
+            org_user_obj = self.queryset.get(Q(user=user) & Q(organization=org_obj.organization))
+        except OrganizationUser.DoesNotExist:
+            raise http.Http404
+        
+        self.check_object_permissions(self.request, org_user_obj)
+        
+        return org_obj
     
     def create(self, *args, **kwargs):
         # if user has R+W (1) or is admin (2)
         data = self.request.data
         data['updater_id'] = self.request.user.id
         max_access = -1
+        
         try:
             instance = self.queryset.get(user__uuid=self.request.user.uuid, access__gte=1)
             max_access = instance.access
@@ -151,20 +169,23 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
     def update(self, *args, **kwargs):
         data = self.request.data
         
-        data.pop('organization')
-        data.pop('user')
+        try:
+            data.pop('organization')
+        except:
+            pass
+        try:
+            data.pop('user')
+        except:
+            pass
         
         data['uuid'] = self.kwargs['uuid']
         data['updater_id'] = self.request.user.id
         instance = None
 
         try:
-            instance = self.queryset.get(uuid=data['uuid'])
+            instance = self.get_object()
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        # if self.request.user.uuid != instance.user.uuid:
-        #     return Response(status=status.HTTP_404_NOT_FOUND)
         
         serializer = CreateOrganizationUserSerializer(instance=instance, data=data, partial=True)
 
@@ -172,11 +193,6 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
             self.perform_update(serializer)
             return Response(status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
-
-    @action(detail=False)
-    def me(self, request):
-        serializer = GetOrganizationUserSerializer(request.user, context={"request": request})
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 class OrganizationImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = OrganizationImageSerializer
