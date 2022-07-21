@@ -23,10 +23,21 @@ class IsUserGroupAdmin(permissions.BasePermission):
         return False
 
     def has_object_permission(self, request, view, obj):
-        
-        print("\n\n\nCHOI\n\n\n")
         if obj.user != request.user:
             return False
         if obj.access != 2:
+            return False
+        return True
+
+class IsUserGroupUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            return True
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        if obj.user != request.user:
+            return False
+        if obj.access < 1:
             return False
         return True
