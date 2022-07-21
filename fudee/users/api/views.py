@@ -11,7 +11,7 @@ from fudee.users.api.serializers import UserSerializer, UserImageSerializer
 
 from fudee.users.models import User_Image
 
-from fudee.users.permissions import IsUserOwner
+from fudee.users.permissions import IsUserOwner, IsUserImageOwner
 
 User = get_user_model()
 
@@ -65,21 +65,24 @@ class UserImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, 
     queryset = User_Image.objects.all()
     lookup_field = "uuid"
     parser_classes = (MultiPartParser, FileUploadParser)
+    permission_classes = [permissions.IsAuthenticated, IsUserImageOwner]
     
     def get_object(self, *args, **kwargs):
         assert isinstance(self.request.user.uuid, uuid_lib.UUID)
-        ui_uuid = self.kwargs['uuid']
+        obj = None
         try:
-            return User_Image.objects.get(uuid=ui_uuid)
+            obj = self.queryset.get(uuid=self.kwargs['uuid'])
         except User.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        self.check_object_permissions(self.request, obj)
+        return obj
     
     def retrieve(self, *args, **kwargs):
         ui_uuid = self.kwargs['uuid']
         user_uuid = self.request.user.uuid
 
         try:
-            ui = User_Image.objects.filter(Q(user__uuid=user_uuid) & Q(uuid=ui_uuid)).latest('date_created')
+            ui = self.get_object()
         except User_Image.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
