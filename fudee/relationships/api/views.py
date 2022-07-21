@@ -11,7 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, CreateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
+from rest_framework.parsers import MultiPartParser, FileUploadParser
 
 import uuid as uuid_lib
 
@@ -24,6 +24,8 @@ from fudee.relationships.api.serializers import \
 
 from fudee.relationships.models import \
     Invite, Relationship, User_Group, User_Group_User, User_Group_Image
+    
+from fudee.relationships.permissions import IsInviteOwner
 
 User = get_user_model()
 
@@ -31,7 +33,7 @@ class InviteViewSet(ListModelMixin, CreateModelMixin, GenericViewSet):
     # serializer = CreateInviteSerializer
     queryset = Invite.objects.all()
     lookup_field = "uuid"
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsInviteOwner]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['email', 'phone']
 
@@ -119,9 +121,9 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
         return self.queryset.filter(Q(user2__uuid=user1) | Q(user1__uuid=user1))
     
     def get_object(self, *args, **kwargs):
-        assert isinstance(self.request.kwargs['uuid'], uuid_lib.UUID)
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
         try:
-            return Relationship.objects.filter(Q(user1__uuid=self.request.kwargs['uuid']) | Q(user2__uuid=self.request.kwargs['uuid'])).first()
+            return Relationship.objects.filter(Q(user1__uuid=self.kwargs['uuid']) | Q(user2__uuid=self.kwargs['uuid'])).first()
         except Relationship.DoesNotExist:
             raise http.Http404
     
