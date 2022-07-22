@@ -24,3 +24,18 @@ class Shift(models.Model):
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_updated = models.DateField(blank=True, null=True)
     updater_id = models.IntegerField(blank=True, null=True)
+
+class Swap(model.Model):
+    uuid = models.UUIDField(
+        db_index=True,
+        unique=True,
+        default=uuid_lib.uuid4,
+        editable=False)
+    old_employee = models.ForeignKey(User, related_name="old employee", on_delete=models.PROTECT, blank=True, null=True)
+    new_employee = models.ForeignKey(User, related_name="new employee", on_delete=models.PROTECT, blank=True, null=True)
+    shift = models.ForeignKey(Shift, related_name="shift", on_delete=models.PROTECT, blank=True, null=True)
+    is_approved = models.BooleanField(default=False)
+    date_created = models.DateField(auto_now_add=True, blank=True)
+    date_updated = models.DateField(blank=True, null=True)
+    manager = models.ForeignKey(User, related_name="manager", on_delete=models.PROTECT, blank=True, null=True)
+    
