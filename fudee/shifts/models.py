@@ -47,6 +47,19 @@ class Swap(models.Model):
     date_updated = models.DateField(blank=True, null=True)
     manager = models.ForeignKey(User, related_name="manager", on_delete=models.PROTECT, blank=True, null=True)
     
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # Call the "real" save() method.
+        if self.is_approved:
+            shift = None
+            
+            try:
+                shift = Shift.objects.get(uuid=self.shift.uuid)
+            except Shift.DoesNotExist:
+                return
+            
+            shift.employee = self.new_employee
+            shift.save()
+    
     class Meta:
         unique_together = (('old_employee', 'shift'),)
         index_together = (('old_employee', 'shift'),)
