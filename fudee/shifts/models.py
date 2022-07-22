@@ -25,7 +25,7 @@ class Shift(models.Model):
     date_updated = models.DateField(blank=True, null=True)
     updater_id = models.IntegerField(blank=True, null=True)
 
-class Swap(model.Model):
+class Swap(models.Model):
     uuid = models.UUIDField(
         db_index=True,
         unique=True,
@@ -38,4 +38,3 @@ class Swap(model.Model):
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_updated = models.DateField(blank=True, null=True)
     manager = models.ForeignKey(User, related_name="manager", on_delete=models.PROTECT, blank=True, null=True)
-    
