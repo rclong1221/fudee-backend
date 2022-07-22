@@ -23,14 +23,14 @@ from fudee.events.api.serializers import \
 from fudee.events.models import \
     Event, EventUser, EventImage
     
-from fudee.shifts.models import Shift
+from fudee.shifts.models import Shift, Swap
 
-from fudee.shifts.api.serializers import GetShiftSerializer, CreateShiftSerializer
+from fudee.shifts.api.serializers import GetShiftSerializer, CreateShiftSerializer, GetSwapSerializer
 
 from fudee.organizations.models import Organization, OrganizationUser
 
 from fudee.events.permissions import IsEventUser
-from fudee.shifts.permissions import IsShiftUser
+from fudee.shifts.permissions import IsEmployee
 
 User = get_user_model()
 
@@ -158,7 +158,7 @@ class ShiftViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, Destroy
         
         try:
             shift_obj = self.queryset.get(uuid=self.kwargs['uuid'])
-        except Event.DoesNotExist:
+        except Shift.DoesNotExist:
             raise http.Http404
         
         # event_user_obj = None
@@ -214,3 +214,45 @@ class ShiftViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, Destroy
             self.perform_update(serializer)
             return Response(status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
+
+class SwapViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+    queryset = Swap.objects.all()
+    lookup_field = "uuid"
+    permission_classes = [permissions.IsAuthenticated, IsEmployee]
+    
+    def get_serializer_class(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            return GetSwapSerializer
+        # if self.action == 'create' or self.action == 'update':
+        #     return CreateSwapSerializer
+    
+    def get_object(self, *args, **kwargs):
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        user = self.request.user
+        
+        # Get swap object
+        swap_obj = None
+        try:
+            swap_obj = Swap.objects.get(uuid=self.kwargs['uuid'])
+        except Swap.DoesNotExist:
+            raise http.Http404
+        
+        # Get shift object
+        shift_obj = None
+        try:
+            shift_obj = Shift.objects.get(Q(uuid=swap_obj.shift.uuid))
+        except Shift.DoesNotExist:
+            raise http.Http404
+        
+        print(shift_obj.organization.uuid)
+        print(user)
+        
+        # Check if user is part of the organization through swap object
+        org_user_obj = None
+        try:
+            org_user_obj = OrganizationUser.objects.get(Q(organization=shift_obj.organization) & Q(user=user))
+        except Organization.DoesNotExist:
+            raise http.Http404
+        self.check_object_permissions(self.request, org_user_obj)
+
+        return swap_obj
