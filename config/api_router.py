@@ -5,7 +5,7 @@ from fudee.users.api.views import UserViewSet, UserImageViewSet
 from fudee.relationships.api.views import InviteViewSet, RelationshipViewSet, UserGroupViewSet, UserGroupUserViewSet, UserGroupImageViewSet
 from fudee.organizations.api.views import OrganizationViewSet, OrganizationUserViewSet, OrganizationImageViewSet
 from fudee.events.api.views import EventViewSet, EventUserViewSet, EventImageViewSet
-from fudee.shifts.api.views import ShiftViewSet, OrganizationEventViewSet
+from fudee.shifts.api.views import ShiftViewSet, OrganizationEventViewSet, SwapViewSet
 
 if settings.DEBUG:
     router = DefaultRouter()
@@ -27,6 +27,7 @@ router.register("event_user", EventUserViewSet)
 router.register("event_image", EventImageViewSet)
 router.register("shift", ShiftViewSet)
 router.register("organization_event", OrganizationEventViewSet)
+router.register("swap", SwapViewSet)
 
 app_name = "api"
 urlpatterns = router.urls
