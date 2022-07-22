@@ -24,6 +24,14 @@ class Shift(models.Model):
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_updated = models.DateField(blank=True, null=True)
     updater_id = models.IntegerField(blank=True, null=True)
+    
+    # def clean(self):
+    #     if not self.name:
+    #         raise ValidationError("Valid organization name is required.")
+    
+    class Meta:
+        unique_together = (('employee', 'event'),)
+        index_together = (('employee', 'event'),)
 
 class Swap(models.Model):
     uuid = models.UUIDField(
@@ -38,3 +46,20 @@ class Swap(models.Model):
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_updated = models.DateField(blank=True, null=True)
     manager = models.ForeignKey(User, related_name="manager", on_delete=models.PROTECT, blank=True, null=True)
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # Call the "real" save() method.
+        if self.is_approved:
+            shift = None
+            
+            try:
+                shift = Shift.objects.get(uuid=self.shift.uuid)
+            except Shift.DoesNotExist:
+                return
+            
+            shift.employee = self.new_employee
+            shift.save()
+    
+    class Meta:
+        unique_together = (('old_employee', 'shift'),)
+        index_together = (('old_employee', 'shift'),)
