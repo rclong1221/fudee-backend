@@ -74,3 +74,39 @@ class GetSwapSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shift
         fields =  ["uuid", "old_employee", "new_employee", "shift", "is_approved", "date_created", "date_updated", "manager"]
+
+class CreateSwapSerializer(serializers.ModelSerializer):
+    uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
+    old_employee = serializers.UUIDField(format="hex_verbose")
+    new_employee = serializers.UUIDField(format="hex_verbose", required=False)
+    shift = serializers.UUIDField(format="hex_verbose")
+    is_approved = serializers.BooleanField(required=False)
+    date_updated = serializers.DateField(read_only=True)
+    manager = serializers.UUIDField(format="hex_verbose", required=False)
+    
+    def create(self, validated_data):
+        """
+        """
+        old_employee = User.objects.get(uuid=validated_data['old_employee'])
+        shift = Shift.objects.get(uuid=validated_data['shift'])
+        data = Swap.objects.create(
+            old_employee=old_employee,
+            shift=shift,
+            is_approved=False,
+            date_updated=datetime.now().strftime("%Y-%m-%d")
+        )
+        return data
+    
+    def update(self, instance, validated_data):
+        new_employee = User.objects.get(uuid=validated_data['new_employee'])
+        manager = User.objects.get(uuid=validated_data['manager'])
+        instance.new_employee = new_employee
+        instance.is_approved = True
+        instance.date_updated = datetime.now().strftime("%Y-%m-%d")
+        instance.manager = manager
+        instance.save()
+        return instance
+    
+    class Meta:
+        model = Shift
+        fields =  ["uuid", "old_employee", "new_employee", "shift", "is_approved", "date_updated", "manager"]
