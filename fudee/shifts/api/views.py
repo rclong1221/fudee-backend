@@ -25,7 +25,9 @@ from fudee.events.models import \
     
 from fudee.shifts.models import Shift, Swap
 
-from fudee.shifts.api.serializers import GetShiftSerializer, CreateShiftSerializer, GetSwapSerializer
+from fudee.shifts.api.serializers import \
+    GetShiftSerializer, CreateShiftSerializer, \
+    GetSwapSerializer, CreateSwapSerializer
 
 from fudee.organizations.models import Organization, OrganizationUser
 
@@ -223,8 +225,8 @@ class SwapViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyM
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
             return GetSwapSerializer
-        # if self.action == 'create' or self.action == 'update':
-        #     return CreateSwapSerializer
+        if self.action == 'create' or self.action == 'update':
+            return CreateSwapSerializer
     
     def get_object(self, *args, **kwargs):
         assert isinstance(self.request.user.uuid, uuid_lib.UUID)
@@ -244,9 +246,6 @@ class SwapViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyM
         except Shift.DoesNotExist:
             raise http.Http404
         
-        print(shift_obj.organization.uuid)
-        print(user)
-        
         # Check if user is part of the organization through swap object
         org_user_obj = None
         try:
@@ -256,3 +255,43 @@ class SwapViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyM
         self.check_object_permissions(self.request, org_user_obj)
 
         return swap_obj
+
+    def update(self, *args, **kwargs):
+        data = self.request.data
+        data['uuid'] = self.kwargs['uuid']
+        data['manager'] = self.request.user.uuid
+        instance = None
+        manager = None
+        
+        # Get shift object
+        shift_obj = None
+        try:
+            shift_obj = Shift.objects.get(Q(uuid=data['shift']))
+        except Shift.DoesNotExist:
+            raise http.Http404
+        
+        # Check if current user is a manager
+        try:
+            manager = OrganizationUser.objects.get(Q(organization=shift_obj.organization) & Q(user__uuid=data['manager']))
+            if manager.access < 2:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+        except OrganizationUser.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if new_employee is an employee
+        try:
+            OrganizationUser.objects.filter(Q(organization=shift_obj.organization) & Q(user__uuid=data['new_employee']))
+        except OrganizationUser.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            instance = self.get_object()
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = CreateSwapSerializer(instance=instance, data=data, partial=True)
+
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            return Response(status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
