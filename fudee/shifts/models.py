@@ -31,8 +31,8 @@ class Swap(models.Model):
         unique=True,
         default=uuid_lib.uuid4,
         editable=False)
-    old_employee = models.ForeignKey(User, related_name="old employee", on_delete=models.PROTECT, blank=True, null=True)
-    new_employee = models.ForeignKey(User, related_name="new employee", on_delete=models.PROTECT, blank=True, null=True)
+    old_employee = models.ForeignKey(User, related_name="old_employee", on_delete=models.PROTECT, blank=True, null=True)
+    new_employee = models.ForeignKey(User, related_name="new_employee", on_delete=models.PROTECT, blank=True, null=True)
     shift = models.ForeignKey(Shift, related_name="shift", on_delete=models.PROTECT, blank=True, null=True)
     is_approved = models.BooleanField(default=False)
     date_created = models.DateField(auto_now_add=True, blank=True)
