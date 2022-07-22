@@ -1,5 +1,6 @@
 from cgitb import lookup
 from datetime import datetime, timedelta
+from math import perm
 from multiprocessing import context
 from operator import le
 from django import http
@@ -28,12 +29,15 @@ from fudee.shifts.api.serializers import GetShiftSerializer, CreateShiftSerializ
 
 from fudee.organizations.models import Organization, OrganizationUser
 
+from fudee.events.permissions import IsEventUser
+from fudee.shifts.permissions import IsShiftUser
+
 User = get_user_model()
 
 class OrganizationEventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = Event.objects.all()
     lookup_field = "uuid"
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsEventUser]
     # filter_backends = [DjangoFilterBackend]
     # filterset_fields = "__all__"
         
@@ -42,6 +46,26 @@ class OrganizationEventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMi
             return GetEventSerializer
         if self.action == 'create' or self.action == 'update':
             return CreateEventSerializer
+    
+    def get_object(self, *args, **kwargs):
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        user = self.request.user
+        event_user_obj = None
+        
+        try:
+            event_user_obj = EventUser.objects.get(Q(user=user) & Q(event__uuid=self.kwargs['uuid']))
+        except EventUser.DoesNotExist:
+            raise http.Http404
+        
+        self.check_object_permissions(self.request, event_user_obj)
+        event_obj = None
+        
+        try:
+            event_obj = self.queryset.get(uuid=self.kwargs['uuid'])
+        except Event.DoesNotExist:
+            raise http.Http404
+
+        return event_obj
         
     def create(self, *args, **kwargs):
         data = self.request.data.copy()
@@ -95,18 +119,17 @@ class OrganizationEventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMi
     def update(self, *args, **kwargs):
         data = self.request.data.copy()
         data['uuid'] = self.kwargs['uuid']
-        data.pop('user')
+        try:
+            data.pop('user')
+        except:
+            pass
         data['updater_id'] = self.request.user.id
         instance = None
         
         try:
-            instance = self.queryset.get(uuid=data['uuid'])
-        except self.queryset.DoesNotExist:
+            instance = self.get_object()
+        except Event.DoesNotExist:
             Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        # TODO: Check if user is authorized to edit Event through EventUsers table
-        # if self.request.user.id != instance.user.id
-        #     return Response(status=status.HTTP_404_NOT_FOUND)
         
         serializer = CreateEventSerializer(instance=instance, data=data, partial=True)
 
@@ -119,13 +142,45 @@ class OrganizationEventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMi
 class ShiftViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = Shift.objects.all()
     lookup_field = "uuid"
+    permission_classes = [permissions.IsAuthenticated, IsEventUser]
     
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
             return GetShiftSerializer
         if self.action == 'create' or self.action == 'update':
             return CreateShiftSerializer
+    
+    def get_object(self, *args, **kwargs):
+        assert isinstance(self.request.user.uuid, uuid_lib.UUID)
+        user = self.request.user
         
+        shift_obj = None
+        
+        try:
+            shift_obj = self.queryset.get(uuid=self.kwargs['uuid'])
+        except Event.DoesNotExist:
+            raise http.Http404
+        
+        # event_user_obj = None
+        # try:
+        #     event_user_obj = EventUser.objects.get(Q(user=user) & Q(event=shift_obj.event))
+        # except EventUser.DoesNotExist:
+        #     raise http.Http404
+        # self.check_object_permissions(self.request, event_user_obj)
+        
+        # if self.request.method == 'PUT' or self.request.method == 'PATCH' or self.request.method == 'DELETE':
+        #     try:
+        #         OrganizationUser.objects.filter(Q(organization__uuid=self.request.data['organization']) & Q(user__uuid=self.request.data['employee'])).first()
+        #     except OrganizationUser.DoesNotExist:
+        #         return http.Http404
+        #     try:
+        #         event_user_obj = EventUser.objects.get(Q(user=self.request.data['employee']) & Q(event=shift_obj.event))
+        #     except EventUser.DoesNotExist:
+        #         raise http.Http404
+        #     self.check_object_permissions(self.request, event_user_obj)
+
+        return shift_obj
+    
     def update(self, *args, **kwargs):
         data = self.request.data
         data['uuid'] = self.kwargs['uuid']
@@ -133,7 +188,6 @@ class ShiftViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, Destroy
         instance = None
         
         org_user = None
-        
         # Check if employee is in OrganizationUser
         try:
             org_user = OrganizationUser.objects.filter(Q(organization__uuid=data['organization']) & Q(user__uuid=data['employee'])).first()
@@ -150,12 +204,9 @@ class ShiftViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, Destroy
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            instance = self.queryset.get(uuid=data['uuid'])
+            instance = self.get_object()
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        # if self.request.user.uuid != instance.user.uuid:
-        #     return Response(status=status.HTTP_404_NOT_FOUND)
         
         serializer = CreateShiftSerializer(instance=instance, data=data, partial=True)
 
