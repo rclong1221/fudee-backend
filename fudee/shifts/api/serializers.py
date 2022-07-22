@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from fudee.shifts.models import Shift
+from fudee.shifts.models import Shift, Swap
 from fudee.organizations.models import Organization
 from fudee.events.models import Event
 
@@ -60,3 +60,17 @@ class CreateShiftSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shift
         fields =  ["uuid", "employee", "organization", "event", "date_updated", "updater_id"]
+    
+class GetSwapSerializer(serializers.ModelSerializer):
+    uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
+    old_employee = UserSerializer(read_only=True)
+    new_employee = UserSerializer(read_only=True)
+    shift = GetShiftSerializer(read_only=True)
+    is_approved = serializers.BooleanField(read_only=True)
+    date_created = serializers.DateField(read_only=True)
+    date_updated = serializers.DateField(read_only=True)
+    manager = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = Shift
+        fields =  ["uuid", "old_employee", "new_employee", "shift", "is_approved", "date_created", "date_updated", "manager"]
