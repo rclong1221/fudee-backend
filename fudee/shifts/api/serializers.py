@@ -48,12 +48,13 @@ class CreateShiftSerializer(serializers.ModelSerializer):
         return data
     
     def update(self, instance, validated_data):
+        updater = User.objects.get(uuid=validated_data.get('updater', instance.updater))
         employee = User.objects.get(uuid=validated_data['employee'])
         organization = Organization.objects.get(uuid=validated_data['organization'])
         instance.employee = employee
         instance.organization = organization
         instance.date_updated = datetime.now().strftime("%Y-%m-%d")
-        instance.updater = validated_data.get('updater', instance.updater)
+        instance.updater = updater
         instance.save()
         return instance
     

@@ -43,6 +43,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
+        updater = User.objects.get(uuid=validated_data.get('updater', instance.updater))
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
         instance.location = validated_data.get('location', instance.location)
@@ -50,7 +51,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
         instance.date_start = validated_data.get('date_start', instance.date_start)
         instance.date_end = validated_data.get('date_end', instance.date_end)
         instance.date_updated = datetime.now().strftime("%Y-%m-%d")
-        instance.updater = validated_data.get('updater', instance.updater)
+        instance.updater = updater
         instance.save()
         return instance
     
@@ -86,21 +87,22 @@ class CreateEventUserSerializer(serializers.ModelSerializer):
         """
         user = User.objects.get(uuid=validated_data['user'])
         event = Event.objects.get(uuid=validated_data['event'])
+        updater = User.objects.get(uuid=validated_data['updater'])
         data = EventUser.objects.create(
             event=event,
             user=user,
             access=validated_data['access'],
             is_active=validated_data['is_active'],
             date_updated=datetime.now().strftime("%Y-%m-%d"),
-            updater=validated_data['updater'],
+            updater=updater,
         )
         return data
 
     def update(self, instance, validated_data):
-        # instance.access = validated_data.get('access', instance.access)
+        updater = User.objects.get(uuid=validated_data.get('updater', instance.updater))
         instance.is_active = validated_data.get('is_active', instance.is_active)
         instance.date_updated = datetime.now().strftime("%Y-%m-%d")
-        instance.updater = validated_data.get('updater', instance.updater)
+        instance.updater = updater
         instance.save()
         return instance
     

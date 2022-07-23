@@ -72,7 +72,7 @@ class OrganizationEventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMi
     def create(self, *args, **kwargs):
         data = self.request.data.copy()
         data['user'] = self.request.user.uuid
-        data['updater'] = self.request.user
+        data['updater'] = self.request.user.uuid
         
         # Create Event entry
         serializer = CreateEventSerializer(data=data)
@@ -125,7 +125,7 @@ class OrganizationEventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMi
             data.pop('user')
         except:
             pass
-        data['updater'] = self.request.user
+        data['updater'] = self.request.user.uuid
         instance = None
         
         try:
@@ -186,7 +186,7 @@ class ShiftViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, Destroy
     def update(self, *args, **kwargs):
         data = self.request.data
         data['uuid'] = self.kwargs['uuid']
-        data['updater'] = self.request.user
+        data['updater'] = self.request.user.uuid
         instance = None
         
         org_user = None

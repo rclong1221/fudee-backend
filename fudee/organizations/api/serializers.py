@@ -40,9 +40,10 @@ class CreateOrganizationSerializer(serializers.ModelSerializer):
         return data
     
     def update(self, instance, validated_data):
+        updater = User.objects.get(uuid=validated_data.get('updater', instance.updater))
         instance.name = validated_data.get('name', instance.name)
         instance.date_updated = datetime.now().strftime("%Y-%m-%d")
-        instance.updater = validated_data.get('updater', instance.updater)
+        instance.updater = updater
         instance.save()
         return instance
     
@@ -79,21 +80,22 @@ class CreateOrganizationUserSerializer(serializers.ModelSerializer):
         """
         user = User.objects.get(uuid=validated_data['user'])
         organization = Organization.objects.get(uuid=validated_data['organization'])
+        updater = User.objects.get(uuid=validated_data['updater'])
         data = OrganizationUser.objects.create(
             organization=organization,
             user=user,
             access=validated_data['access'],
             is_active=validated_data['is_active'],
             date_updated=datetime.now().strftime("%Y-%m-%d"),
-            updater=validated_data['updater'],
+            updater=updater,
         )
         return data
 
     def update(self, instance, validated_data):
-        # instance.access = validated_data.get('access', instance.access)
+        updater = User.objects.get(uuid=validated_data.get('updater', instance.updater))
         instance.is_active = validated_data.get('is_active', instance.is_active)
         instance.date_updated = datetime.now().strftime("%Y-%m-%d")
-        instance.updater = validated_data.get('updater', instance.updater)
+        instance.updater = updater
         instance.save()
         return instance
     
