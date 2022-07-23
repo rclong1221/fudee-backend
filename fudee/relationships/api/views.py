@@ -330,9 +330,6 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        if self.request.user.uuid != instance.user.uuid:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
         serializer = CreateUserGroupUserSerializer(instance=instance, data=data, partial=True)
 
         if serializer.is_valid():
@@ -340,7 +337,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
             return Response(status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
 
-class UserGroupImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+class UserGroupImageViewSet(DestroyModelMixin, GenericViewSet):
     serializer_class = UserGroupImageSerializer
     queryset = UserGroupImage.objects.all()
     parser_classes = (MultiPartParser, FileUploadParser)

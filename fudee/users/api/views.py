@@ -60,7 +60,7 @@ class UserViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, Gener
         serializer = UserSerializer(request.user, context={"request": request})
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
-class UserImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+class UserImageViewSet(RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = UserImageSerializer
     queryset = UserImage.objects.all()
     lookup_field = "uuid"

@@ -78,7 +78,7 @@ class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
                 'user': self.request.user.uuid,
                 'access': 2,     #admin
                 'is_active': True,
-                'updater': self.request.user,
+                'updater': self.request.user.uuid,
             }
             gs = CreateOrganizationUserSerializer(data=org_user)
             if gs.is_valid():
@@ -194,7 +194,7 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
             return Response(status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
 
-class OrganizationImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+class OrganizationImageViewSet(DestroyModelMixin, GenericViewSet):
     serializer_class = OrganizationImageSerializer
     queryset = OrganizationImage.objects.all()
     parser_classes = (MultiPartParser, FileUploadParser)
