@@ -32,7 +32,7 @@ class CreateOrganizationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         """
-        updater = User.objects.get(id=validated_data['updater'])
+        updater = User.objects.get(uuid=validated_data['updater'])
         data = Organization.objects.create(
             updater=updater,
             name=validated_data['name'],
