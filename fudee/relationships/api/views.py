@@ -337,7 +337,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
             return Response(status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
 
-class UserGroupImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+class UserGroupImageViewSet(DestroyModelMixin, GenericViewSet):
     serializer_class = UserGroupImageSerializer
     queryset = UserGroupImage.objects.all()
     parser_classes = (MultiPartParser, FileUploadParser)
