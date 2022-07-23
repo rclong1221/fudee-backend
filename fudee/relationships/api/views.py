@@ -142,7 +142,7 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
         user_uuid = str(self.request.user.uuid)
         if user_uuid != data['user1'] and user_uuid != data['user2']:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        data['updater'] = self.request.user
+        data['updater'] = self.request.user.uuid
         serializer = CreateRelationshipSerializer(data=self.request.data)
 
         if serializer.is_valid():
@@ -152,7 +152,7 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
     
     def update(self, *args, **kwargs):
         data = {key: self.request.data[key] for key in self.request.data.keys() & {'relationship'}}
-        data['updater'] = self.request.user
+        data['updater'] = self.request.user.uuid
         instance = None
         
         try:
@@ -222,27 +222,30 @@ class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
         if serializer.is_valid():
             ug_obj = serializer.save()
             # Create UserGroupUser entry for creator
-            ug = UserGroup.get(uuid=ug_obj.uuid)
+            ug = UserGroup.objects.get(uuid=ug_obj.uuid)
             group_user = {
                 'group': ug.uuid,
                 'user': self.request.user.uuid,
                 'access': 2,     #admin
                 'is_active': True,
-                'updater': self.request.user,
+                'updater': self.request.user.uuid,
             }
             gs = CreateUserGroupUserSerializer(data=group_user)
             if gs.is_valid():
+                print("\n\n2\n\n")
                 gs.save()
                 return Response(status=status.HTTP_201_CREATED)
             else:
+                print("\n\n1\n\n")
                 ug.delete()
                 return Response(status=status.HTTP_409_CONFLICT)
+        print("\n\n2\n\n")
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
 
     def update(self, *args, **kwargs):
         data = {key: self.request.data[key] for key in self.request.data.keys() & {'name'}}
         data['uuid'] = self.kwargs['uuid']
-        data['updater'] = self.request.user
+        data['updater'] = self.request.user.uuid
         instance = None
         
         try:
@@ -296,7 +299,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
     def create(self, *args, **kwargs):
         # if user has R+W (1) or is admin (2)
         data = self.request.data
-        data['updater'] = self.request.user
+        data['updater'] = self.request.user.uuid
         max_access = -1
         try:
             instance = self.queryset.get(user__uuid=self.request.user.uuid, access__gte=1)
@@ -319,7 +322,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
     def update(self, *args, **kwargs):
         data = {key: self.request.data[key] for key in self.request.data.keys() & {'access', 'is_active'}}
         data['uuid'] = self.kwargs['uuid']
-        data['updater'] = self.request.user
+        data['updater'] = self.request.user.uuid
         instance = None
 
         try:

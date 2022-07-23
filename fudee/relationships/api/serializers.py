@@ -67,19 +67,21 @@ class CreateRelationshipSerializer(serializers.ModelSerializer):
         """
         user1 = User.objects.get(uuid=validated_data['user1'])
         user2 = User.objects.get(uuid=validated_data['user2'])
+        updater = User.objects.get(uuid=validated_data['updater'])
         data = Relationship.objects.create(
             user1=user1,
             user2=user2,
             relationship=validated_data['relationship'],
             date_updated=datetime.now().strftime("%Y-%m-%d"),
-            updater=validated_data['updater'],
+            updater=updater,
         )
         return data
     
     def update(self, instance, validated_data):
+        updater = User.objects.get(uuid=validated_data.get('updater', instance.updater))
         instance.relationship = validated_data.get('relationship', instance.relationship)
         instance.date_updated = datetime.now().strftime("%Y-%m-%d")
-        instance.updater = validated_data.get('updater', instance.updater)
+        instance.updater = updater
         instance.save()
         return instance
     
@@ -143,20 +145,22 @@ class CreateUserGroupUserSerializer(serializers.ModelSerializer):
         """
         user = User.objects.get(uuid=validated_data['user'])
         group = UserGroup.objects.get(uuid=validated_data['group'])
+        updater = User.objects.get(uuid=validated_data['updater'])
         data = UserGroupUser.objects.create(
             group=group,
             user=user,
             access=validated_data['access'],
             is_active=validated_data['is_active'],
             date_updated=datetime.now().strftime("%Y-%m-%d"),
-            updater=validated_data['updater'],
+            updater=updater,
         )
         return data
 
     def update(self, instance, validated_data):
+        updater = User.objects.get(uuid=validated_data.get('updater', instance.updater))
         instance.is_active = validated_data.get('is_active', instance.is_active)
         instance.date_updated = datetime.now().strftime("%Y-%m-%d")
-        instance.updater = validated_data.get('updater', instance.updater)
+        instance.updater = updater
         instance.save()
         return instance
     

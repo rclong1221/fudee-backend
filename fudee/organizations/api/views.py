@@ -65,7 +65,7 @@ class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
     
     def create(self, *args, **kwargs):
         data = self.request.data
-        data['updater'] = self.request.user
+        data['updater'] = self.request.user.uuid
         serializer = CreateOrganizationSerializer(data=data)
         
         if serializer.is_valid():
@@ -93,7 +93,7 @@ class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
     def update(self, *args, **kwargs):
         data = self.request.data
         data['uuid'] = self.kwargs['uuid']
-        data['updater'] = self.request.user
+        data['updater'] = self.request.user.uuid
         instance = None
         
         try:
@@ -145,7 +145,7 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
     def create(self, *args, **kwargs):
         # if user has R+W (1) or is admin (2)
         data = self.request.data
-        data['updater'] = self.request.user
+        data['updater'] = self.request.user.uuid
         max_access = -1
         
         try:
@@ -179,7 +179,7 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
             pass
         
         data['uuid'] = self.kwargs['uuid']
-        data['updater'] = self.request.user
+        data['updater'] = self.request.user.uuid
         instance = None
 
         try:
