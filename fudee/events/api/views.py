@@ -194,7 +194,7 @@ class EventUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
         serializer = GetEventUserSerializer(request.user, context={"request": request})
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
-class EventImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+class EventImageViewSet(RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = EventImageSerializer
     queryset = EventImage.objects.all()
     parser_classes = (MultiPartParser, FileUploadParser)
