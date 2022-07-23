@@ -77,7 +77,7 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
                 'user': self.request.user.uuid,
                 'access': 2,     #admin
                 'is_active': True,
-                'updater': self.request.user,
+                'updater': self.request.user.uuid,
             }
             gs = CreateEventUserSerializer(data=event_user)
             if gs.is_valid():

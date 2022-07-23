@@ -78,7 +78,7 @@ class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
                 'user': self.request.user.uuid,
                 'access': 2,     #admin
                 'is_active': True,
-                'updater': self.request.user,
+                'updater': self.request.user.uuid,
             }
             gs = CreateOrganizationUserSerializer(data=org_user)
             if gs.is_valid():

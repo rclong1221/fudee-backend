@@ -86,7 +86,7 @@ class OrganizationEventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMi
                 'user': self.request.user.uuid,
                 'access': 2,     #admin
                 'is_active': True,
-                'updater': self.request.user,
+                'updater': self.request.user.uuid,
             }
             eu_serializer = CreateEventUserSerializer(data=event_user)
             if eu_serializer.is_valid():
