@@ -20,7 +20,7 @@ from fudee.organizations.api.serializers import \
     GetOrganizationUserSerializer, CreateOrganizationUserSerializer, OrganizationImageSerializer
 
 from fudee.organizations.models import \
-    Organization, OrganizationUser, Organization_Image
+    Organization, OrganizationUser, OrganizationImage
     
 from fudee.organizations.permissions import IsOrganizationUser
 
@@ -65,7 +65,7 @@ class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
     
     def create(self, *args, **kwargs):
         data = self.request.data
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         serializer = CreateOrganizationSerializer(data=data)
         
         if serializer.is_valid():
@@ -78,7 +78,7 @@ class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
                 'user': self.request.user.uuid,
                 'access': 2,     #admin
                 'is_active': True,
-                'updater_id': self.request.user.id,
+                'updater': self.request.user,
             }
             gs = CreateOrganizationUserSerializer(data=org_user)
             if gs.is_valid():
@@ -93,7 +93,7 @@ class OrganizationViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
     def update(self, *args, **kwargs):
         data = self.request.data
         data['uuid'] = self.kwargs['uuid']
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         instance = None
         
         try:
@@ -145,7 +145,7 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
     def create(self, *args, **kwargs):
         # if user has R+W (1) or is admin (2)
         data = self.request.data
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         max_access = -1
         
         try:
@@ -179,7 +179,7 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
             pass
         
         data['uuid'] = self.kwargs['uuid']
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         instance = None
 
         try:
@@ -196,7 +196,7 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
 
 class OrganizationImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = OrganizationImageSerializer
-    queryset = Organization_Image.objects.all()
+    queryset = OrganizationImage.objects.all()
     parser_classes = (MultiPartParser, FileUploadParser)
     lookup_field = "uuid"
     

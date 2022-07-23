@@ -24,7 +24,7 @@ class Organization(models.Model):
     image = models.FileField(blank=True, null=True)
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_updated = models.DateField(blank=True, null=True)
-    updater_id = models.IntegerField(blank=True, null=True)
+    updater = models.ForeignKey(User, related_name="organization_updater", on_delete=models.PROTECT, blank=True, null=True)
     primary_image = models.UUIDField(blank=True, null=True)
     
     def clean(self):
@@ -47,19 +47,19 @@ class OrganizationUser(models.Model):
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_accepted = models.DateField(blank=True, null=True)
     date_updated = models.DateField(blank=True, null=True)
-    updater_id = models.IntegerField(blank=True, null=True)
+    updater = models.ForeignKey(User, related_name="orguser_updater", on_delete=models.PROTECT, blank=True, null=True)
     
     def clean(self):
-        if self.updater_id is None:
+        if self.updater is None:
             pass
-        elif self.updater_id != self.user.id:
+        elif self.updater != self.user:
             raise ValidationError("Updater ID is invalid.")
     
     class Meta:
         unique_together = (('organization', 'user'),)
         index_together = (('organization', 'user'),)
 
-class Organization_Image(models.Model):
+class OrganizationImage(models.Model):
     """
     
     """
@@ -78,7 +78,7 @@ class Organization_Image(models.Model):
         
         try:
             org = Organization.objects.get(uuid=self.organization.uuid)
-        except self.queryset.DoesNotExist:
+        except Organization.DoesNotExist:
             return
         
         org.primary_image = self.uuid

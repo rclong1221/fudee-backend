@@ -43,22 +43,22 @@ class Relationship(models.Model):
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_accepted = models.DateField(blank=True, null=True)
     date_updated = models.DateField(blank=True, null=True)
-    updater_id = models.IntegerField(blank=True, null=True)
+    updater = models.ForeignKey(User, related_name="relationship_updater", on_delete=models.PROTECT, blank=True, null=True)
     
     def clean(self):
         if self.user1.id == self.user2.id:
             raise ValidationError("User cannot have a relationship with themself.")
         
-        if self.updater_id is None:
+        if self.updater is None:
             pass
-        elif self.updater_id != self.user1.id and self.updater_id != self.user2.id:
+        elif self.updater.id != self.user1.id and self.updater.id != self.user2.id:
             raise ValidationError("Updater ID is invalid.")
     
     class Meta:
         unique_together = (('user1', 'user2'),)
         index_together = (('user1', 'user2'),)
 
-class User_Group(models.Model):
+class UserGroup(models.Model):
     """
     
     """
@@ -76,7 +76,7 @@ class User_Group(models.Model):
         unique_together = (('name', 'creator'),)
         index_together = (('name', 'creator'),)
 
-class User_Group_User(models.Model):
+class UserGroupUser(models.Model):
     """
     
     """
@@ -85,26 +85,26 @@ class User_Group_User(models.Model):
         unique=True,
         default=uuid_lib.uuid4,
         editable=False)
-    group = models.ForeignKey(User_Group, on_delete=models.PROTECT)
+    group = models.ForeignKey(UserGroup, on_delete=models.PROTECT)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     access = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(2)])
     is_active = models.BooleanField(default=False, blank=False, null=False)
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_accepted = models.DateField(blank=True, null=True)
     date_updated = models.DateField(blank=True, null=True)
-    updater_id = models.IntegerField(blank=True, null=True)
+    updater = models.ForeignKey(User, related_name="usergroupuser_updater", on_delete=models.PROTECT, blank=True, null=True)
     
     def clean(self):
-        if self.updater_id is None:
+        if self.updater is None:
             pass
-        elif self.updater_id != self.user.id:
+        elif self.updater.id != self.user.id:
             raise ValidationError("Updater ID is invalid.")
     
     class Meta:
         unique_together = (('group', 'user'),)
         index_together = (('group', 'user'),)
 
-class User_Group_Image(models.Model):
+class UserGroupImage(models.Model):
     """
     
     """
@@ -114,7 +114,7 @@ class User_Group_Image(models.Model):
         default=uuid_lib.uuid4,
         editable=False)
     image = models.ImageField(blank=True, null=True)
-    user_group = models.ForeignKey(User_Group, on_delete=models.PROTECT)
+    user_group = models.ForeignKey(UserGroup, on_delete=models.PROTECT)
     date_created = models.DateTimeField(auto_now_add=True, blank=True)
     
     def save(self, *args, **kwargs):
@@ -122,8 +122,8 @@ class User_Group_Image(models.Model):
         ug = None
         
         try:
-            ug = User_Group.objects.get(uuid=self.user_group.uuid)
-        except self.queryset.DoesNotExist:
+            ug = UserGroup.objects.get(uuid=self.user_group.uuid)
+        except UserGroup.DoesNotExist:
             return
         
         ug.primary_image = self.uuid

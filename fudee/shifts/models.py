@@ -23,7 +23,7 @@ class Shift(models.Model):
     event = models.ForeignKey(Event, related_name="event", on_delete=models.PROTECT)
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_updated = models.DateField(blank=True, null=True)
-    updater_id = models.IntegerField(blank=True, null=True)
+    updater = models.ForeignKey(User, related_name="shift_updater", on_delete=models.PROTECT, blank=True, null=True)
     
     # def clean(self):
     #     if not self.name:

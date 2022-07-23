@@ -72,7 +72,7 @@ class OrganizationEventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMi
     def create(self, *args, **kwargs):
         data = self.request.data.copy()
         data['user'] = self.request.user.uuid
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         
         # Create Event entry
         serializer = CreateEventSerializer(data=data)
@@ -86,7 +86,7 @@ class OrganizationEventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMi
                 'user': self.request.user.uuid,
                 'access': 2,     #admin
                 'is_active': True,
-                'updater_id': self.request.user.id,
+                'updater': self.request.user,
             }
             eu_serializer = CreateEventUserSerializer(data=event_user)
             if eu_serializer.is_valid():
@@ -97,7 +97,7 @@ class OrganizationEventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMi
                     # 'employee': None,
                     # 'organization': None,
                     'event': event_obj.uuid,
-                    'updater_id': self.request.user.id
+                    'updater': self.request.user
                 }
                 
                 shift_serializer = CreateShiftSerializer(data=shift)
@@ -125,7 +125,7 @@ class OrganizationEventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMi
             data.pop('user')
         except:
             pass
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         instance = None
         
         try:
@@ -186,7 +186,7 @@ class ShiftViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, Destroy
     def update(self, *args, **kwargs):
         data = self.request.data
         data['uuid'] = self.kwargs['uuid']
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         instance = None
         
         org_user = None

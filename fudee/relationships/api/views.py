@@ -24,7 +24,7 @@ from fudee.relationships.api.serializers import \
     UserGroupImageSerializer
 
 from fudee.relationships.models import \
-    Invite, Relationship, User_Group, User_Group_User, User_Group_Image
+    Invite, Relationship, UserGroup, UserGroupUser, UserGroupImage
 
 from fudee.relationships.permissions import IsRelationshipUser, IsUserGroupUser
 
@@ -142,7 +142,7 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
         user_uuid = str(self.request.user.uuid)
         if user_uuid != data['user1'] and user_uuid != data['user2']:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         serializer = CreateRelationshipSerializer(data=self.request.data)
 
         if serializer.is_valid():
@@ -152,12 +152,12 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
     
     def update(self, *args, **kwargs):
         data = {key: self.request.data[key] for key in self.request.data.keys() & {'relationship'}}
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         instance = None
         
         try:
             instance = self.get_object()
-        except self.queryset.DoesNotExist:
+        except Relationship.DoesNotExist:
             Response(status=status.HTTP_400_BAD_REQUEST)
             
         data = self.request.data
@@ -174,18 +174,16 @@ class RelationshipViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, 
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
     
     def destroy(self, *args, **kwargs):
-        user1 = self.request.user.uuid
         instance = self.get_object()
-        self.check_object_permissions(self.request, instance)
 
         try:
             instance.delete()
             return Response(status=status.HTTP_202_ACCEPTED)
-        except self.queryset.DoesNotExist:
+        except Relationship.DoesNotExist:
             Response(status=status.HTTP_400_BAD_REQUEST)
 
 class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
-    queryset = User_Group.objects.all()
+    queryset = UserGroup.objects.all()
     lookup_field = "uuid"
     permission_classes = [permissions.IsAuthenticated, IsUserGroupUser]
 
@@ -201,8 +199,8 @@ class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
         ugu_obj = None
         
         try:
-            ugu_obj = User_Group_User.objects.get(Q(user=user) & Q(group__uuid=self.kwargs['uuid']))
-        except User_Group_User.DoesNotExist:
+            ugu_obj = UserGroupUser.objects.get(Q(user=user) & Q(group__uuid=self.kwargs['uuid']))
+        except UserGroupUser.DoesNotExist:
             raise http.Http404
         
         self.check_object_permissions(self.request, ugu_obj)
@@ -210,7 +208,7 @@ class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
         
         try:
             ug_obj = self.queryset.get(uuid=self.kwargs['uuid'])
-        except User_Group.DoesNotExist:
+        except UserGroup.DoesNotExist:
             raise http.Http404
 
         return ug_obj
@@ -223,14 +221,14 @@ class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
 
         if serializer.is_valid():
             ug_obj = serializer.save()
-            # Create User_Group_User entry for creator
-            ug = User_Group.objects.get(uuid=ug_obj.uuid)
+            # Create UserGroupUser entry for creator
+            ug = UserGroup.get(uuid=ug_obj.uuid)
             group_user = {
                 'group': ug.uuid,
                 'user': self.request.user.uuid,
                 'access': 2,     #admin
                 'is_active': True,
-                'updater_id': self.request.user.id,
+                'updater': self.request.user,
             }
             gs = CreateUserGroupUserSerializer(data=group_user)
             if gs.is_valid():
@@ -244,12 +242,12 @@ class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
     def update(self, *args, **kwargs):
         data = {key: self.request.data[key] for key in self.request.data.keys() & {'name'}}
         data['uuid'] = self.kwargs['uuid']
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         instance = None
         
         try:
             instance = self.queryset.get(uuid=data['uuid'])
-        except self.queryset.DoesNotExist:
+        except UserGroup.DoesNotExist:
             Response(status=status.HTTP_400_BAD_REQUEST)
         
         if self.request.user.uuid != instance.creator.uuid:
@@ -263,7 +261,7 @@ class UserGroupViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
 
 class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
-    queryset = User_Group_User.objects.all()
+    queryset = UserGroupUser.objects.all()
     lookup_field = "uuid"
     permission_classes = [permissions.IsAuthenticated, IsUserGroupUser]
 
@@ -280,7 +278,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
         
         try:
             ug_obj = self.queryset.get(uuid=self.kwargs['uuid'])
-        except User_Group.DoesNotExist:
+        except UserGroup.DoesNotExist:
             raise http.Http404
         
         user = self.request.user
@@ -288,7 +286,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
         
         try:
             ugu_obj = self.queryset.get(Q(user=user) & Q(group=ug_obj.group))
-        except User_Group_User.DoesNotExist:
+        except UserGroupUser.DoesNotExist:
             raise http.Http404
         
         self.check_object_permissions(self.request, ugu_obj)
@@ -298,7 +296,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
     def create(self, *args, **kwargs):
         # if user has R+W (1) or is admin (2)
         data = self.request.data
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         max_access = -1
         try:
             instance = self.queryset.get(user__uuid=self.request.user.uuid, access__gte=1)
@@ -321,7 +319,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
     def update(self, *args, **kwargs):
         data = {key: self.request.data[key] for key in self.request.data.keys() & {'access', 'is_active'}}
         data['uuid'] = self.kwargs['uuid']
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         instance = None
 
         try:
@@ -341,7 +339,7 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
 
 class UserGroupImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = UserGroupImageSerializer
-    queryset = User_Group_Image.objects.all()
+    queryset = UserGroupImage.objects.all()
     parser_classes = (MultiPartParser, FileUploadParser)
     permission_classes = [permissions.IsAuthenticated, IsUserGroupUser]
     lookup_field = "uuid"
@@ -351,8 +349,8 @@ class UserGroupImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet)
         ugu = None
         
         try:
-            ugu = User_Group_User.objects.get(Q(group__uuid=data['user_group']) & Q(user=self.request.user))
-        except User_Group_User.DoesNotExist:
+            ugu = UserGroupUser.objects.get(Q(group__uuid=data['user_group']) & Q(user=self.request.user))
+        except UserGroupUser.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         print(ugu)
         self.check_object_permissions(self.request, ugu)

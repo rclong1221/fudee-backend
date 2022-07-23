@@ -38,11 +38,10 @@ class User(AbstractUser):
         return reverse("users:detail", kwargs={"username": self.username})
     
     def soft_delete(self):
-        print("\n\n\n\n\n")
         self.is_active = False
         self.save()
 
-class User_Image(models.Model):
+class UserImage(models.Model):
     """
     
     """
@@ -61,7 +60,7 @@ class User_Image(models.Model):
         
         try:
             u = User.objects.get(uuid=self.user.uuid)
-        except self.queryset.DoesNotExist:
+        except User.DoesNotExist:
             return
         
         u.primary_image = self.uuid
