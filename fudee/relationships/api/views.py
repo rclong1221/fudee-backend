@@ -330,9 +330,6 @@ class UserGroupUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin,
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        if self.request.user.uuid != instance.user.uuid:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
         serializer = CreateUserGroupUserSerializer(instance=instance, data=data, partial=True)
 
         if serializer.is_valid():
