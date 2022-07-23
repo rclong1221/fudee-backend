@@ -194,7 +194,7 @@ class OrganizationUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMix
             return Response(status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
 
-class OrganizationImageViewSet(UpdateModelMixin, DestroyModelMixin, GenericViewSet):
+class OrganizationImageViewSet(DestroyModelMixin, GenericViewSet):
     serializer_class = OrganizationImageSerializer
     queryset = OrganizationImage.objects.all()
     parser_classes = (MultiPartParser, FileUploadParser)
