@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
 from fudee.users.forms import UserAdminChangeForm, UserAdminCreationForm
-from fudee.users.models import User_Image
+from fudee.users.models import UserImage
 
 User = get_user_model()
 
@@ -33,4 +33,4 @@ class UserAdmin(auth_admin.UserAdmin):
     list_display = ["username", "name", "is_superuser"]
     search_fields = ["name"]
 
-admin.site.register(User_Image)
+admin.site.register(UserImage)

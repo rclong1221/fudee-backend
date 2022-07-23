@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from fudee.users.models import User_Image
+from fudee.users.models import UserImage
 
 User = get_user_model()
 
@@ -30,12 +30,12 @@ class UserImageSerializer(serializers.ModelSerializer):
         """
         """
         user = User.objects.get(uuid=validated_data['user'])
-        data = User_Image.objects.create(
+        data = UserImage.objects.create(
             image=validated_data['image'],
             user=user
         )
         return data
     
     class Meta:
-        model = User_Image
+        model = UserImage
         fields = ["uuid", "image", "user", "date_created"]

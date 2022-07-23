@@ -16,14 +16,14 @@ User = get_user_model()
 class GetShiftSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
     date_updated = serializers.DateField(read_only=True)
-    updater_id = serializers.IntegerField(read_only=True)
+    updater = UserSerializer(read_only=True)
     employee = UserSerializer(read_only=True)
     event = GetEventSerializer(read_only=True)
     organization = GetOrganizationSerializer(read_only=True)
     
     class Meta:
         model = Shift
-        fields =  ["uuid", "employee", "organization", "event", "date_updated", "updater_id"]
+        fields =  ["uuid", "employee", "organization", "event", "date_updated", "updater"]
 
 class CreateShiftSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
@@ -31,7 +31,7 @@ class CreateShiftSerializer(serializers.ModelSerializer):
     organization = serializers.UUIDField(format="hex_verbose", required=False)
     event = serializers.UUIDField(format="hex_verbose")
     date_updated = serializers.DateField(read_only=True)
-    updater_id = serializers.IntegerField()
+    updater = serializers.UUIDField(format="hex_verbose", required=False)
     
     def create(self, validated_data):
         """
@@ -53,13 +53,13 @@ class CreateShiftSerializer(serializers.ModelSerializer):
         instance.employee = employee
         instance.organization = organization
         instance.date_updated = datetime.now().strftime("%Y-%m-%d")
-        instance.updater_id = validated_data.get('updater_id', instance.updater_id)
+        instance.updater = validated_data.get('updater', instance.updater)
         instance.save()
         return instance
     
     class Meta:
         model = Shift
-        fields =  ["uuid", "employee", "organization", "event", "date_updated", "updater_id"]
+        fields =  ["uuid", "employee", "organization", "event", "date_updated", "updater"]
     
 class GetSwapSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)

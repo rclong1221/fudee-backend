@@ -62,7 +62,7 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
     def create(self, *args, **kwargs):
         data = self.request.data.copy()
         data['user'] = self.request.user.uuid
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         
         serializer = CreateEventSerializer(data=data)
         
@@ -77,7 +77,7 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
                 'user': self.request.user.uuid,
                 'access': 2,     #admin
                 'is_active': True,
-                'updater_id': self.request.user.id,
+                'updater': self.request.user,
             }
             gs = CreateEventUserSerializer(data=event_user)
             if gs.is_valid():
@@ -96,7 +96,7 @@ class EventViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateM
             data.pop('user')
         except:
             pass
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         instance = None
         
         try:
@@ -148,7 +148,7 @@ class EventUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
     def create(self, *args, **kwargs):
         # if user has R+W (1) or is admin (2)
         data = self.request.data
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         max_access = -1
         try:
             instance = self.queryset.get(user__uuid=self.request.user.uuid, access__gte=1)
@@ -171,7 +171,7 @@ class EventUserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, Des
     def update(self, *args, **kwargs):
         data = {key: self.request.data[key] for key in self.request.data.keys() & {'access', 'is_active'}}
         data['uuid'] = self.kwargs['uuid']
-        data['updater_id'] = self.request.user.id
+        data['updater'] = self.request.user
         instance = None
 
         try:

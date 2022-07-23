@@ -9,7 +9,7 @@ from django.db.models import Q
 
 from fudee.users.api.serializers import UserSerializer, UserImageSerializer
 
-from fudee.users.models import User_Image
+from fudee.users.models import UserImage
 
 from fudee.users.permissions import IsUserOwner, IsUserImageOwner
 
@@ -46,7 +46,7 @@ class UserViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, Gener
         try:
             user.soft_delete()
             return Response(status=status.HTTP_202_ACCEPTED)
-        except self.queryset.DoesNotExist:
+        except User.DoesNotExist:
             Response(status=status.HTTP_400_BAD_REQUEST)
         
         serializer = UserSerializer(user, data=data, context={'request': self.request})
@@ -62,7 +62,7 @@ class UserViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, Gener
 
 class UserImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = UserImageSerializer
-    queryset = User_Image.objects.all()
+    queryset = UserImage.objects.all()
     lookup_field = "uuid"
     parser_classes = (MultiPartParser, FileUploadParser)
     permission_classes = [permissions.IsAuthenticated, IsUserImageOwner]
@@ -72,7 +72,7 @@ class UserImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, 
         obj = None
         try:
             obj = self.queryset.get(uuid=self.kwargs['uuid'])
-        except User.DoesNotExist:
+        except UserImage.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         self.check_object_permissions(self.request, obj)
         return obj
@@ -80,7 +80,7 @@ class UserImageViewSet(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, 
     def retrieve(self, *args, **kwargs):
         try:
             ui = self.get_object()
-        except User_Image.DoesNotExist:
+        except UserImage.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
         user_image = {

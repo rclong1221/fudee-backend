@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from fudee.events.models import Event, EventUser, EventImage
 
+from fudee.users.api.serializers import UserSerializer
+
 from datetime import datetime
 
 User = get_user_model()
@@ -12,16 +14,16 @@ class GetEventSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Event
-        fields = ["uuid", "title", "description", "location", "recurrences", "primary_image", "date_start", "date_end", "user", "date_created", "date_updated", "updater_id"]
+        fields = ["uuid", "title", "description", "location", "recurrences", "primary_image", "date_start", "date_end", "user", "date_created", "date_updated", "updater"]
 
 class CreateEventSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
     user = serializers.UUIDField(format="hex_verbose")
     recurrences = serializers.CharField(allow_blank=True)
     date_updated = serializers.DateField(read_only=True)
-    updater_id = serializers.IntegerField(read_only=True)
+    updater = serializers.UUIDField(format="hex_verbose", required=False)
     
-    ["uuid", "title", "description", "location", "recurrences", "date_start", "date_end", "user", "date_updated", "updater_id"]
+    ["uuid", "title", "description", "location", "recurrences", "date_start", "date_end", "user", "date_updated", "updater"]
     
     def create(self, validated_data):
         """
@@ -36,7 +38,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
             date_end=validated_data['date_end'],
             user=user,
             date_updated=datetime.now().strftime("%Y-%m-%d"),
-            updater_id=user.id,
+            updater=user,
         )
         return data
 
@@ -48,13 +50,13 @@ class CreateEventSerializer(serializers.ModelSerializer):
         instance.date_start = validated_data.get('date_start', instance.date_start)
         instance.date_end = validated_data.get('date_end', instance.date_end)
         instance.date_updated = datetime.now().strftime("%Y-%m-%d")
-        instance.updater_id = validated_data.get('updater_id', instance.updater_id)
+        instance.updater = validated_data.get('updater', instance.updater)
         instance.save()
         return instance
     
     class Meta:
         model = Event
-        fields = ["uuid", "title", "description", "location", "recurrences", "date_start", "date_end", "user", "date_updated", "updater_id"]
+        fields = ["uuid", "title", "description", "location", "recurrences", "date_start", "date_end", "user", "date_updated", "updater"]
 
 class GetEventUserSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
@@ -63,11 +65,11 @@ class GetEventUserSerializer(serializers.ModelSerializer):
     is_active = serializers.BooleanField(read_only=True)
     date_accepted = serializers.DateField(read_only=True)
     date_updated = serializers.DateField(read_only=True)
-    updater_id = serializers.IntegerField(read_only=True)
+    updater = UserSerializer()
     
     class Meta:
         model = EventUser
-        fields = ["uuid", "event", "user", "access", "is_active", "date_created", "date_accepted", "date_updated", "updater_id"]
+        fields = ["uuid", "event", "user", "access", "is_active", "date_created", "date_accepted", "date_updated", "updater"]
 
 class CreateEventUserSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)
@@ -77,7 +79,7 @@ class CreateEventUserSerializer(serializers.ModelSerializer):
     is_active = serializers.BooleanField()
     date_accepted = serializers.DateField(read_only=True)
     date_updated = serializers.DateField(read_only=True)
-    updater_id = serializers.IntegerField()
+    updater = serializers.UUIDField(format="hex_verbose", required=False)
     
     def create(self, validated_data):
         """
@@ -90,7 +92,7 @@ class CreateEventUserSerializer(serializers.ModelSerializer):
             access=validated_data['access'],
             is_active=validated_data['is_active'],
             date_updated=datetime.now().strftime("%Y-%m-%d"),
-            updater_id=validated_data['updater_id'],
+            updater=validated_data['updater'],
         )
         return data
 
@@ -98,13 +100,13 @@ class CreateEventUserSerializer(serializers.ModelSerializer):
         # instance.access = validated_data.get('access', instance.access)
         instance.is_active = validated_data.get('is_active', instance.is_active)
         instance.date_updated = datetime.now().strftime("%Y-%m-%d")
-        instance.updater_id = validated_data.get('updater_id', instance.updater_id)
+        instance.updater = validated_data.get('updater', instance.updater)
         instance.save()
         return instance
     
     class Meta:
         model = EventUser
-        fields = ["uuid", "event", "user", "access", "is_active", "date_created", "date_accepted", "date_updated", "updater_id"]
+        fields = ["uuid", "event", "user", "access", "is_active", "date_created", "date_accepted", "date_updated", "updater"]
         
 class EventImageSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(format="hex_verbose", read_only=True)

@@ -27,7 +27,7 @@ class Event(models.Model):
     recurrences = RecurrenceField(blank=True)
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_updated = models.DateField(blank=True, null=True)
-    updater_id = models.IntegerField(blank=True, null=True)
+    updater = models.ForeignKey(User, related_name="event_updater", on_delete=models.PROTECT, blank=True, null=True)
 
 class EventUser(models.Model):
     """
@@ -45,12 +45,12 @@ class EventUser(models.Model):
     date_created = models.DateField(auto_now_add=True, blank=True)
     date_accepted = models.DateField(blank=True, null=True)
     date_updated = models.DateField(blank=True, null=True)
-    updater_id = models.IntegerField(blank=True, null=True)
+    updater = models.ForeignKey(User, related_name="eventuser_updater", on_delete=models.PROTECT, blank=True, null=True)
     
     def clean(self):
-        if self.updater_id is None:
+        if self.updater is None:
             pass
-        elif self.updater_id != self.user.id:
+        elif self.updater != self.user:
             raise ValidationError("Updater ID is invalid.")
     
     class Meta:
@@ -76,7 +76,7 @@ class EventImage(models.Model):
         
         try:
             event = Event.objects.get(uuid=self.event.uuid)
-        except self.queryset.DoesNotExist:
+        except Event.DoesNotExist:
             return
         
         event.primary_image = self.uuid
