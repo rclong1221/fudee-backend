@@ -48,11 +48,6 @@ class Relationship(models.Model):
     def clean(self):
         if self.user1.id == self.user2.id:
             raise ValidationError("User cannot have a relationship with themself.")
-        
-        if self.updater is None:
-            pass
-        elif self.updater.id != self.user1.id and self.updater.id != self.user2.id:
-            raise ValidationError("Updater ID is invalid.")
     
     class Meta:
         unique_together = (('user1', 'user2'),)
@@ -93,12 +88,6 @@ class UserGroupUser(models.Model):
     date_accepted = models.DateField(blank=True, null=True)
     date_updated = models.DateField(blank=True, null=True)
     updater = models.ForeignKey(User, related_name="usergroupuser_updater", on_delete=models.PROTECT, blank=True, null=True)
-    
-    def clean(self):
-        if self.updater is None:
-            pass
-        elif self.updater.id != self.user.id:
-            raise ValidationError("Updater ID is invalid.")
     
     class Meta:
         unique_together = (('group', 'user'),)

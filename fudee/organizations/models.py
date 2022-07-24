@@ -49,12 +49,6 @@ class OrganizationUser(models.Model):
     date_updated = models.DateField(blank=True, null=True)
     updater = models.ForeignKey(User, related_name="orguser_updater", on_delete=models.PROTECT, blank=True, null=True)
     
-    def clean(self):
-        if self.updater is None:
-            pass
-        elif self.updater != self.user:
-            raise ValidationError("Updater ID is invalid.")
-    
     class Meta:
         unique_together = (('organization', 'user'),)
         index_together = (('organization', 'user'),)
