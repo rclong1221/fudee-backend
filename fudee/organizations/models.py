@@ -30,6 +30,9 @@ class Organization(models.Model):
     def clean(self):
         if not self.name:
             raise ValidationError("Valid organization name is required.")
+    
+    def __str__(self):
+        return "Name: {0}".format(self.name)
 
 class OrganizationUser(models.Model):
     """
@@ -48,6 +51,9 @@ class OrganizationUser(models.Model):
     date_accepted = models.DateField(blank=True, null=True)
     date_updated = models.DateField(blank=True, null=True)
     updater = models.ForeignKey(User, related_name="orguser_updater", on_delete=models.PROTECT, blank=True, null=True)
+    
+    def __str__(self):
+        return "Organization: {0}\tUser: {1}\tAccess: {2}".format(self.organization.name, self.user.name, self.access)
     
     class Meta:
         unique_together = (('organization', 'user'),)
@@ -77,3 +83,6 @@ class OrganizationImage(models.Model):
         
         org.primary_image = self.uuid
         org.save()
+    
+    def __str__(self):
+        return "Organization: {0}".format(self.organization.name)
