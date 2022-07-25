@@ -29,6 +29,16 @@ class Invite(models.Model):
     def clean(self):
         if not self.email and not self.phone:
             raise ValidationError("Email address or phone number is required.")
+    
+    def __str__(self):
+        if self.email and self.phone:
+            return "User: {0}\tEmail: {1}\tPhone: {2}".format(self.user.name, self.email, self.phone)
+        if self.email:
+            return "User: {0}\tEmail: {1}".format(self.user.name, self.email)
+        if self.email:
+            return "User: {0}\tPhone: {2}".format(self.user.name, self.phone)
+            
+        
         
 class Relationship(models.Model):
     uuid = models.UUIDField( # Used by the API to look up the record 
@@ -49,6 +59,9 @@ class Relationship(models.Model):
         if self.user1.id == self.user2.id:
             raise ValidationError("User cannot have a relationship with themself.")
     
+    def __str__(self):
+        return "User 1: {0}\tUser 2: {1}\tRelationship: {2}".format(self.user1.name, self.user2.name, self.relationship)
+    
     class Meta:
         unique_together = (('user1', 'user2'),)
         index_together = (('user1', 'user2'),)
@@ -66,6 +79,9 @@ class UserGroup(models.Model):
     creator = models.ForeignKey(User, on_delete=models.PROTECT)
     primary_image = models.UUIDField(blank=True, null=True)
     date_created = models.DateField(auto_now_add=True, blank=True)
+    
+    def __str__(self):
+        return "Name: {0}\tCreator: {1}".format(self.name, self.creator.name)
     
     class Meta:
         unique_together = (('name', 'creator'),)
@@ -88,6 +104,9 @@ class UserGroupUser(models.Model):
     date_accepted = models.DateField(blank=True, null=True)
     date_updated = models.DateField(blank=True, null=True)
     updater = models.ForeignKey(User, related_name="usergroupuser_updater", on_delete=models.PROTECT, blank=True, null=True)
+    
+    def __str__(self):
+        return "Group: {0}\tUser: {1}\tAccess: {2}".format(self.group.name, self.user.name, self.access)
     
     class Meta:
         unique_together = (('group', 'user'),)
@@ -117,4 +136,6 @@ class UserGroupImage(models.Model):
         
         ug.primary_image = self.uuid
         ug.save()
-        
+
+    def __str__(self):
+        return "Group: {0}".format(self.user_group.name)

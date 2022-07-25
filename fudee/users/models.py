@@ -40,6 +40,9 @@ class User(AbstractUser):
     def soft_delete(self):
         self.is_active = False
         self.save()
+    
+    def __str__(self):
+        return "{0}".format(self.name)
 
 class UserImage(models.Model):
     """
