@@ -29,7 +29,8 @@ class Event(models.Model):
     date_updated = models.DateField(blank=True, null=True)
     updater = models.ForeignKey(User, related_name="event_updater", on_delete=models.PROTECT, blank=True, null=True)
     
-    
+    def __str__(self):
+        return "Title: {0}".format(self.title)    
 
 class EventUser(models.Model):
     """
@@ -48,6 +49,9 @@ class EventUser(models.Model):
     date_accepted = models.DateField(blank=True, null=True)
     date_updated = models.DateField(blank=True, null=True)
     updater = models.ForeignKey(User, related_name="eventuser_updater", on_delete=models.PROTECT, blank=True, null=True)
+    
+    def __str__(self):
+        return "Event: {0}\tUser: {1}\tAccess: {2}".format(self.event.title, self.user.name, self.access)  
     
     class Meta:
         unique_together = (('event', 'user'),)
@@ -77,6 +81,9 @@ class EventImage(models.Model):
         
         event.primary_image = self.uuid
         event.save()
+
+    def __str__(self):
+        return "Event: {0}".format(self.event.name)
 
 class EventParam(models.Model):
     uuid = models.UUIDField(
