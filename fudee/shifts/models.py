@@ -29,6 +29,9 @@ class Shift(models.Model):
     #     if not self.name:
     #         raise ValidationError("Valid organization name is required.")
     
+    def __str__(self):
+        return "Organization: {0}\tEmployee: {1}\tEvent: {2}".format(self.organization.name, self.employee.name, self.event.title)
+    
     class Meta:
         unique_together = (('employee', 'event'),)
         index_together = (('employee', 'event'),)
@@ -59,6 +62,9 @@ class Swap(models.Model):
             
             shift.employee = self.new_employee
             shift.save()
+    
+    def __str__(self):
+        return "Employee: {0}\tShift: {1}}".format(self.old_employee.name, self.shift.event.title)
     
     class Meta:
         unique_together = (('old_employee', 'shift'),)
