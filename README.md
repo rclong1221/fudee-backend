@@ -72,24 +72,50 @@ The following details how to deploy this application.
 
 ### Docker
 
+#### Development
+
 Build and run
 ``` bash
-docker-compose -f {local | production}.yml build
-docker-compose -f {local | production}.yml up -d
+docker-compose -f local.yml build
+docker-compose -f local.yml up -d
 ```
 
 Python Django Shell
 ``` bash
-docker-compose -f {local | production}.yml run --rm django python manage.py shell
+docker-compose -f local.yml run --rm django python manage.py shell
 ```
 
 Check logs
 ``` bash
-docker-compose -f {local | production}.yml logs
+docker-compose -f local.yml logs
 ```
 
 Scale application
 ``` bash
-docker-compose -f {local | production}.yml up --scale django=4
-docker-compose -f {local | production}.yml up --scale celeryworker=2
+docker-compose -f local.yml up --scale django=4
+docker-compose -f local.yml up --scale celeryworker=2
+```
+
+#### Production
+
+Build and run
+``` bash
+docker-compose -f production.yml build
+docker-compose -f production.yml up -d
+```
+
+Python Django Shell
+``` bash
+docker-compose -f production.yml run --rm django python manage.py shell
+```
+
+Check logs
+``` bash
+docker-compose -f production.yml logs
+```
+
+Scale application
+``` bash
+docker-compose -f production.yml up --scale django=4
+docker-compose -f production.yml up --scale celeryworker=2
 ```
