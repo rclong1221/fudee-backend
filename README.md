@@ -15,9 +15,9 @@ A social planning application for the bar and restaurant industry.
 
 -   To create a **superuser account**, use this command:
 
-        ``` bash
-        python manage.py createsuperuser
-        ```
+``` bash
+python manage.py createsuperuser
+```
 
 For convenience, you can keep your normal user logged in on Chrome and your superuser logged in on Firefox (or similar), so that you can see how the site behaves for both kinds of users.
 
@@ -25,26 +25,26 @@ For convenience, you can keep your normal user logged in on Chrome and your supe
 
 Running type checks with mypy:
 
-    ``` bash
-    mypy fudee
-    ```
+``` bash
+mypy fudee
+```
 
 ### Test coverage
 
 To run the tests, check your test coverage, and generate an HTML coverage report:
 
-    ``` bash
-    coverage run -m pytest
-    coverage html
-    open htmlcov/index.html
-    ```
+``` bash
+coverage run -m pytest
+coverage html
+open htmlcov/index.html
+```
 
 
 #### Running tests with pytest
 
-    ``` bash
-    pytest
-    ```
+``` bash
+pytest
+```
 
 ### Live reloading and Sass CSS compilation
 
