@@ -1,6 +1,7 @@
-# fudee
+![fudee](https://raw.githubusercontent.com/rclong1221/project-assets/main/fudee-backend/fudee-logos-resized.jpeg
+)
 
-fudee, a social planning application for the bar and restaurant industry.  Made by industry workers, for industry workers.
+A social planning application for the bar and restaurant industry.
 
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/django/django/)
 [![Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
