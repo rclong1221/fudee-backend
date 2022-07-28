@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status, permissions
 from rest_framework.decorators import action
-from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.parsers import MultiPartParser, FileUploadParser
@@ -12,6 +12,8 @@ from fudee.users.api.serializers import UserSerializer, UserImageSerializer
 from fudee.users.models import UserImage
 
 from fudee.users.permissions import IsUserOwner, IsUserImageOwner
+
+from rest_framework import filters
 
 User = get_user_model()
 
@@ -106,3 +108,9 @@ class UserImageViewSet(RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
             serializer.save()
             return Response(status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
+
+class UserSearchViewSet(ListModelMixin, GenericViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['username', 'first_name', 'middle_name', 'last_name', 'email']
