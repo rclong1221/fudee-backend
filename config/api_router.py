@@ -1,7 +1,7 @@
 from django.conf import settings
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
-from fudee.users.api.views import UserViewSet, UserImageViewSet
+from fudee.users.api.views import UserViewSet, UserImageViewSet, UserSearchViewSet
 from fudee.relationships.api.views import InviteViewSet, RelationshipViewSet, UserGroupViewSet, UserGroupUserViewSet, UserGroupImageViewSet
 from fudee.organizations.api.views import OrganizationViewSet, OrganizationUserViewSet, OrganizationImageViewSet
 from fudee.events.api.views import EventViewSet, EventUserViewSet, EventImageViewSet
@@ -14,6 +14,7 @@ else:
 
 router.register("users", UserViewSet)
 router.register("user_image", UserImageViewSet)
+router.register("search", UserSearchViewSet)
 router.register("invite", InviteViewSet)
 router.register("relationship", RelationshipViewSet)
 router.register("user_group", UserGroupViewSet)
