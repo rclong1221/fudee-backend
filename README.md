@@ -128,3 +128,7 @@ Scale application
 docker-compose -f production.yml up --scale django=4
 docker-compose -f production.yml up --scale celeryworker=2
 ```
+
+### Example
+
+![Search](https://raw.githubusercontent.com/rclong1221/project-assets/main/fudee-backend/search.png)
