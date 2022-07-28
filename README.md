@@ -69,6 +69,8 @@ In development, it is often nice to be able to see emails that are being sent fr
 
 With MailHog running, to view messages that are sent by your application, open your browser and go to `http://127.0.0.1:8025`
 
+![Mailhog](https://raw.githubusercontent.com/rclong1221/project-assets/main/fudee-backend/mailhog.png)
+
 ### Sentry
 
 Sentry is an error logging aggregator service. You can sign up for a free account at <https://sentry.io/signup/?code=cookiecutter> or download and host it yourself.
