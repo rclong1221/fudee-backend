@@ -1,0 +1,9 @@
+{% extends "account/email/base_message.txt" %}
+{% load account %}
+{% load i18n %}
+
+{% block content %}{% autoescape off %}{% user_display user as user_display %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}Welcome to {{ site_domain }}!  You're receiving this e-mail because your email address was used with username {{ user_display }} to register an account.
+
+To confirm that this is correct, activate using the following link: 
+
+{{ activate_url }}{% endblocktrans %}{% endautoescape %}{% endblock %}
