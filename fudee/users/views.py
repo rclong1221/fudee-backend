@@ -46,3 +46,10 @@ class UserRedirectView(LoginRequiredMixin, RedirectView):
 
 
 user_redirect_view = UserRedirectView.as_view()
+
+from django.views.generic.base import TemplateView
+
+class EmailConfirmed(TemplateView):
+    template_name = 'accounts/email_confirmed.html'
+
+email_confirmed_view = EmailConfirmed.as_view()
