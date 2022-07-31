@@ -7,6 +7,8 @@ from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
 
+from fudee.users.views import email_confirmed_view
+
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
     path(
@@ -17,6 +19,7 @@ urlpatterns = [
     # User management
     path("users/", include("fudee.users.urls", namespace="users")),
     path('rest-auth/registration/account-email-verification-sent/', TemplateView.as_view(template_name="account/verification_sent.html"), name="verification_sent"),
+    path('rest-auth/registration/account-confirm-email/<str:key>/', TemplateView.as_view(template_name="account/email_confirmed.html"), name="email_confirmed"),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
