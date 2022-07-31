@@ -1,0 +1,30 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+{% block head_title %}
+    {% translate "Email Confirmation" %}
+{% endblock %}
+
+{% block inner %}
+    <h1>{% translate "Email Confirmation" %}</h1>
+
+    <p id='conf'>{% blocktranslate %}{% endblocktranslate %}</p>
+
+    <script type="text/javascript">
+        $(document).ready(function(){
+            var parts = window.location.href.split('/');
+            var lastSegment = parts.pop() || parts.pop();
+            var _key = {
+                key: lastSegment
+            };
+            $.post( "/rest-auth/registration/verify-email/", _key, function( data, status ) {
+                console.log(data);
+                console.log(status);
+                $('#conf').text('Email has been successfully confirmed!');
+            });
+        });
+    </script>
+    
+{% endblock %}
+
