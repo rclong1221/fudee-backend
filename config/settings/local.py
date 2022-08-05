@@ -11,7 +11,7 @@ SECRET_KEY = env(
     default="YHMR6XhhriDqLj4Ki9dW40Bw67Ync59KPrv9pJAz9Qaz1OaimsF9Ow1ThIeo8QHK",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "localhost:5173", "127.0.0.1:5173"]
 
 # CACHES
 # ------------------------------------------------------------------------------
@@ -66,3 +66,4 @@ INSTALLED_APPS += ["django_extensions"]  # noqa F405
 CELERY_TASK_EAGER_PROPAGATES = True
 # Your stuff...
 # ------------------------------------------------------------------------------
+CORS_ALLOWED_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
