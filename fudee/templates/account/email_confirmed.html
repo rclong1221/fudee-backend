@@ -19,8 +19,6 @@
                 key: lastSegment
             };
             $.post( "/rest-auth/registration/verify-email/", _key, function( data, status ) {
-                console.log(data);
-                console.log(status);
                 $('#conf').text('Email has been successfully confirmed!');
             });
         });
